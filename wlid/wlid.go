@@ -1,4 +1,4 @@
-package gok8sutils
+package wlid
 
 import (
 	"fmt"
@@ -33,6 +33,20 @@ var (
 	KindReverseMap  = map[string]string{}
 	dataImagesList  = []string{}
 )
+
+// represents workload basic info
+type SpiffeBasicInfo struct {
+	//cluster/datacenter
+	Level0     string `json:"level0"`
+	Level0Type string `json:"level0Type"`
+
+	//namespace/project
+	Level1     string `json:"level0"`
+	Level1Type string `json:"level0Type"`
+
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
 
 func IsWlid(id string) bool {
 	return strings.HasPrefix(id, WlidPrefix)

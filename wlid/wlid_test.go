@@ -1,4 +1,4 @@
-package gok8sutils
+package wlid
 
 import (
 	"testing"

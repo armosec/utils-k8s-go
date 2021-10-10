@@ -3,8 +3,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/armosec/goutils v0.0.0-20211007081709-0f170e011546 h1:dc2JymgTVfR9CA3OQfdU3vPC+3c9nR6BLtxaDhxFgU0=
-github.com/armosec/goutils v0.0.0-20211007081709-0f170e011546/go.mod h1:I9IFcPhB9CzF5yew6NPcArUxQafsGQJ50eTU3pjQUfg=
+github.com/armosec/utils-go v0.0.0-20211010082120-73c512585ce3 h1:2c06U5iuUR+66JuCdzMNkO3XIFs/4XWS3aqLfr0ktBE=
+github.com/armosec/utils-go v0.0.0-20211010082120-73c512585ce3/go.mod h1:gOdZ+u+jdPdRchJZFX0sARh1+f8b1m82tzIUt4KA88I=
 github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
