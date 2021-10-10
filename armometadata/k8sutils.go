@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"go-k8s-utils/wlid"
+	"github.com/armosec/utils-k8s-go/wlid"
 
 	cautils "github.com/armosec/utils-go/utils"
 	"github.com/golang/glog"
