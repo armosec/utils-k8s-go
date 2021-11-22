@@ -160,7 +160,6 @@ func (clusterConfig *ClusterConfig) LoadConfigToEnv() {
 	SetEnv("CA_ORACLE_SERVER", clusterConfig.OracleURL)
 	SetEnv("CA_CUSTOMER_GUID", clusterConfig.CustomerGUID)
 	SetEnv("CA_DASHBOARD_BACKEND", clusterConfig.Dashboard)
-	SetEnv("CA_NOTIFICATION_SERVER_REST", clusterConfig.NotificationWSURL)
 	SetEnv("CA_NOTIFICATION_SERVER_WS", clusterConfig.NotificationWSURL)
 	SetEnv("CA_NOTIFICATION_SERVER_REST", clusterConfig.NotificationRestURL)
 	SetEnv("CA_OCIMAGE_URL", clusterConfig.OciImageURL)
