@@ -49,21 +49,23 @@ const ( // DEPRECATED
 )
 
 type ClusterConfig struct {
-	EventReceiverREST       string `json:"eventReceiverREST"`
-	EventReceiverWS         string `json:"eventReceiverWS"`
-	MaserNotificationServer string `json:"maserNotificationServer"`
-	Postman                 string `json:"postman"`
-	Dashboard               string `json:"dashboard"`
-	Portal                  string `json:"portal"`
-	CustomerGUID            string `json:"customerGUID"`
-	ClusterGUID             string `json:"clusterGUID"`
-	ClusterName             string `json:"clusterName"`
-	OciImageURL             string `json:"ociImageURL"`
-	NotificationWSURL       string `json:"notificationWSURL"`
-	NotificationRestURL     string `json:"notificationRestURL"`
-	VulnScanURL             string `json:"vulnScanURL"`
-	OracleURL               string `json:"oracleURL"`
-	ClairURL                string `json:"clairURL"`
+	EventReceiverREST string `json:"eventReceiverREST"`
+	EventReceiverWS   string `json:"eventReceiverWS"`
+	// depercated - typo
+	MaserNotificationServer  string `json:"maserNotificationServer"`
+	MasterNotificationServer string `json:"masterNotificationServer"`
+	Postman                  string `json:"postman"`
+	Dashboard                string `json:"dashboard"`
+	Portal                   string `json:"portal"`
+	CustomerGUID             string `json:"customerGUID"`
+	ClusterGUID              string `json:"clusterGUID"`
+	ClusterName              string `json:"clusterName"`
+	OciImageURL              string `json:"ociImageURL"`
+	NotificationWSURL        string `json:"notificationWSURL"`
+	NotificationRestURL      string `json:"notificationRestURL"`
+	VulnScanURL              string `json:"vulnScanURL"`
+	OracleURL                string `json:"oracleURL"`
+	ClairURL                 string `json:"clairURL"`
 }
 
 type ImageInfo struct {
