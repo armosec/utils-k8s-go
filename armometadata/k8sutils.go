@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/armosec/utils-go/boolutils"
 	"github.com/armosec/utils-k8s-go/wlid"
 
-	cautils "github.com/armosec/utils-go/utils"
 	"github.com/golang/glog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -89,29 +89,29 @@ func IsAttached(labels map[string]string) *bool {
 		return nil
 	}
 	if attached, ok := labels[ArmoAttach]; ok {
-		if cautils.StringToBool(attached) {
-			return cautils.BoolPointer(true)
+		if boolutils.StringToBool(attached) {
+			return boolutils.BoolPointer(true)
 		} else {
-			return cautils.BoolPointer(false)
+			return boolutils.BoolPointer(false)
 		}
 	}
 
 	// deprecated
 	if _, ok := labels[CAAttachLabel]; ok {
-		return cautils.BoolPointer(true)
+		return boolutils.BoolPointer(true)
 	}
 
 	// deprecated
 	if inject, ok := labels[CAInject]; ok {
-		if cautils.StringToBool(inject) {
-			return cautils.BoolPointer(true)
+		if boolutils.StringToBool(inject) {
+			return boolutils.BoolPointer(true)
 		}
 	}
 
 	// deprecated
 	if ignore, ok := labels[CAIgnore]; ok {
-		if cautils.StringToBool(ignore) {
-			return cautils.BoolPointer(false)
+		if boolutils.StringToBool(ignore) {
+			return boolutils.BoolPointer(false)
 		}
 	}
 

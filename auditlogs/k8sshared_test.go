@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	cautils "github.com/armosec/utils-go/utils"
+	"github.com/armosec/utils-go/str"
 )
 
 func TestAuditStructure(t *testing.T) {
@@ -31,13 +31,13 @@ func TestAuditStructure(t *testing.T) {
 
 	json.Unmarshal(res, &audit2)
 
-	if cautils.AsSHA256(audit2) != cautils.AsSHA256(*audit) {
+	if str.AsSHA256(audit2) != str.AsSHA256(*audit) {
 		t.Errorf("failed to get umarshal(marshal audit wrapper)\n========audit2=======\n%v\n\noriginal:\n:%v", audit2, audit)
 	}
 
 	auditRAW2 := audit2.GetRawK8sEvent()
 
-	if cautils.AsSHA256(*auditRAW2) != cautils.AsSHA256(auditRAW) {
+	if str.AsSHA256(*auditRAW2) != str.AsSHA256(auditRAW) {
 		t.Errorf("failed to get raw audit is different from k8s original audit:\nreplacement:\n%v\n\noriginal: %v", *auditRAW2, auditRAW)
 	}
 

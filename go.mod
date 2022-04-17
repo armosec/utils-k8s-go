@@ -3,7 +3,7 @@ module github.com/armosec/utils-k8s-go
 go 1.17
 
 require (
-	github.com/armosec/utils-go v0.0.2
+	github.com/armosec/utils-go v0.0.4
 	github.com/docker/docker v20.10.9+incompatible
 	github.com/francoispqt/gojay v1.2.13
 	github.com/golang/glog v1.0.0
