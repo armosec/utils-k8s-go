@@ -71,7 +71,7 @@ func ImageTagToImageInfo(imageTag string) (*ImageInfo, error) {
 	splits := strings.Split(imageTag, spDelimiter)
 	if len(splits) == 0 {
 
-		return nil, fmt.Errorf("Invalid image info %s", imageTag)
+		return nil, fmt.Errorf("invalid image info %s", imageTag)
 	}
 
 	ImageInfo.Registry = splits[0]
@@ -141,11 +141,11 @@ func LoadConfig(configPath string, loadToEnv bool) (*ClusterConfig, error) {
 
 	dat, err := ioutil.ReadFile(configPath)
 	if err != nil || len(dat) == 0 {
-		return nil, fmt.Errorf("Config empty or not found. path: %s", configPath)
+		return nil, fmt.Errorf("config empty or not found. path: %s", configPath)
 	}
 	componentConfig := &ClusterConfig{}
 	if err := json.Unmarshal(dat, componentConfig); err != nil {
-		return componentConfig, fmt.Errorf("Failed to read component config, path: %s, reason: %s", configPath, err.Error())
+		return componentConfig, fmt.Errorf("failed to read component config, path: %s, reason: %s", configPath, err.Error())
 	}
 	if loadToEnv {
 		componentConfig.LoadConfigToEnv()
@@ -167,7 +167,7 @@ func (clusterConfig *ClusterConfig) LoadConfigToEnv() {
 	SetEnv("CA_EVENT_RECEIVER_HTTP", clusterConfig.EventReceiverREST)
 	SetEnv("CA_VULNSCAN", clusterConfig.VulnScanURL)
 	SetEnv("CA_POSTMAN", clusterConfig.Postman)
-	SetEnv("MASTER_NOTIFICATION_SERVER_HOST", clusterConfig.MaserNotificationServer)
+	SetEnv("MASTER_NOTIFICATION_SERVER_HOST", clusterConfig.MasterNotificationServer)
 	SetEnv("CLAIR_URL", clusterConfig.ClairURL)
 
 }

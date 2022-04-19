@@ -49,10 +49,8 @@ const ( // DEPRECATED
 )
 
 type ClusterConfig struct {
-	EventReceiverREST string `json:"eventReceiverREST"`
-	EventReceiverWS   string `json:"eventReceiverWS"`
-	// depercated - typo
-	MaserNotificationServer  string `json:"maserNotificationServer"`
+	EventReceiverREST        string `json:"eventReceiverREST"`
+	EventReceiverWS          string `json:"eventReceiverWS"`
 	MasterNotificationServer string `json:"masterNotificationServer"`
 	Postman                  string `json:"postman"`
 	Dashboard                string `json:"dashboard"`
@@ -66,6 +64,7 @@ type ClusterConfig struct {
 	VulnScanURL              string `json:"vulnScanURL"`
 	OracleURL                string `json:"oracleURL"`
 	ClairURL                 string `json:"clairURL"`
+	KubescapeURL             string `json:"kubescapeURL"`
 }
 
 type ImageInfo struct {
