@@ -8,6 +8,7 @@ import (
 // server initialization
 const (
 	ReadinessPath = "readiness"
+	livenessPath  = "liveness"
 	ReadinessPort = "8000"
 )
 
@@ -19,6 +20,10 @@ func InitReadinessV1(isReadinessReady *bool) {
 		} else {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
+	},
+	)
+	http.HandleFunc(fmt.Sprintf("/v1/%s", livenessPath), func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
 	},
 	)
 	http.ListenAndServe(":8000", nil)
