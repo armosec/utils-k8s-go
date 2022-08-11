@@ -13,29 +13,15 @@ const (
 )
 
 type ClusterConfig struct {
+	AccountID         string `json:"accountID"` // use accountID instead of customerGUID
 	EventReceiverREST string `json:"eventReceiverREST"`
 	EventReceiverWS   string `json:"eventReceiverWS"`
 	RootGatewayServer string `json:"rootGatewayServer"`
-	CustomerGUID      string `json:"customerGUID"` // Deprecated, use accountID instead
-	AccountID         string `json:"accountID"`
 	ClusterName       string `json:"clusterName"`
 	GatewayWSURL      string `json:"gatewayWSURL"`
 	GatewayRestURL    string `json:"gatewayRestURL"`
 	KubevulnURL       string `json:"kubevulnURL"`
 	KubescapeURL      string `json:"kubescapeURL"`
-
-	// DEPRECATED
-	MasterNotificationServer string `json:"masterNotificationServer"`
-	Postman                  string `json:"postman"`
-	Dashboard                string `json:"dashboard"`
-	Portal                   string `json:"portal"`
-	ClusterGUID              string `json:"clusterGUID"`
-	OciImageURL              string `json:"ociImageURL"`
-	NotificationWSURL        string `json:"notificationWSURL"`
-	NotificationRestURL      string `json:"notificationRestURL"`
-	VulnScanURL              string `json:"vulnScanURL"`
-	OracleURL                string `json:"oracleURL"`
-	ClairURL                 string `json:"clairURL"`
 }
 
 type ImageInfo struct {
