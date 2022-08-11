@@ -13,15 +13,15 @@ const (
 )
 
 type ClusterConfig struct {
-	AccountID         string `json:"accountID"` // use accountID instead of customerGUID
-	EventReceiverREST string `json:"eventReceiverREST"`
-	EventReceiverWS   string `json:"eventReceiverWS"`
-	RootGatewayServer string `json:"rootGatewayServer"`
-	ClusterName       string `json:"clusterName"`
-	GatewayWSURL      string `json:"gatewayWSURL"`
-	GatewayRestURL    string `json:"gatewayRestURL"`
-	KubevulnURL       string `json:"kubevulnURL"`
-	KubescapeURL      string `json:"kubescapeURL"`
+	ClusterName               string `json:"clusterName"`               // cluster name defined manually or from the cluster context
+	AccountID                 string `json:"accountID"`                 // use accountID instead of customerGUID
+	EventReceiverRestURL      string `json:"eventReceiverRestURL"`      // event receiver rest url
+	EventReceiverWebsocketURL string `json:"eventReceiverWebsocketURL"` // event receiver websocket url
+	RootGatewayURL            string `json:"rootGatewayURL"`            // root gateway url
+	GatewayWebsocketURL       string `json:"gatewayWebsocketURL"`       // in-cluster gateway component websocket url
+	GatewayRestURL            string `json:"gatewayRestURL"`            // in-cluster gateway component REST API url
+	KubevulnURL               string `json:"kubevulnURL"`               // in-cluster kubevuln component REST API url
+	KubescapeURL              string `json:"kubescapeURL"`              // in-cluster kubescape component REST API url
 }
 
 type ImageInfo struct {
