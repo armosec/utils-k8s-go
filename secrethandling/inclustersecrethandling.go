@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
-	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -22,11 +21,9 @@ func updateSecret(authConfig *types.AuthConfig, serverAddress string) {
 		authConfig.ServerAddress = serverAddress
 	}
 	if authConfig.Username == "" || authConfig.Password == "" {
-		glog.Infof("secret missing user name or password, using auth")
 		auth := authConfig.Auth
 		decodedAuth, err := b64.StdEncoding.DecodeString(auth)
 		if err != nil {
-			glog.Errorf("error: %s", err.Error())
 			return
 		}
 
@@ -83,19 +80,17 @@ func ReadSecret(secret interface{}, secretName string) (types.AuthConfig, error)
 func GetSecret(clientset *kubernetes.Clientset, namespace, name string) (*types.AuthConfig, error) {
 	res, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
-		glog.Errorf("%v", err)
+		return nil, err
 	}
 
 	// Read secret
 	secret, err := GetSecretContent(res)
 	if err != nil {
-		glog.Error(err)
 		return nil, err
 	}
 
 	if secret == nil {
 		err := fmt.Errorf("secret %s not found", name)
-		glog.Error(err)
 		return nil, err
 	}
 	sec, err := ReadSecret(secret, name)
@@ -145,13 +140,11 @@ func ParseSecret(res *corev1.Secret, name string) (*types.AuthConfig, error) {
 	// Read secret
 	secret, err := GetSecretContent(res)
 	if err != nil {
-		glog.Error(err)
 		return nil, err
 	}
 
 	if secret == nil {
 		err := fmt.Errorf("secret %s not found", name)
-		glog.Error(err)
 		return nil, err
 	}
 	sec, err := ReadSecret(secret, name)

@@ -6,7 +6,6 @@ require (
 	github.com/armosec/utils-go v0.0.12
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/francoispqt/gojay v1.2.13
-	github.com/golang/glog v1.0.0
 	go.uber.org/zap v1.22.0
 	k8s.io/api v0.24.3
 	k8s.io/apimachinery v0.24.3
