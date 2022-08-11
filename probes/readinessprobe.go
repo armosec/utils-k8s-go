@@ -5,14 +5,18 @@ import (
 	"net/http"
 )
 
-// server initialization
+// paths cannot be changed
 const (
 	ReadinessPath = "readiness"
 	livenessPath  = "liveness"
+)
+
+// port can be changed
+var (
 	ReadinessPort = "8000"
 )
 
-// InitReadinessV1 initialize readiness handler
+// InitReadinessV1 initialize readiness handler. Change the port by changing the global variable. The paths cannot change.
 func InitReadinessV1(isReadinessReady *bool) {
 	http.HandleFunc(fmt.Sprintf("/v1/%s", ReadinessPath), func(w http.ResponseWriter, _ *http.Request) {
 		if *isReadinessReady {
