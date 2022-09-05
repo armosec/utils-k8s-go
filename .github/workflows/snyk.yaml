@@ -1,0 +1,56 @@
+name: pull_request_created
+on:
+  push:
+    paths-ignore:
+      - '**.md' ### Do not run the workflow if Markdown files changed.
+      # - '.github/workflows/*' ### Do not run the workflow if files under path: .github/workflows/* changed.
+
+  workflow_call:
+    secrets:
+      SNYK_TOKEN:
+        required: true
+
+jobs:
+  pr-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: actions/setup-go@v3
+        name: Installing go
+        with:
+          go-version: '1.18'
+          cache: true
+
+      # - name: Scanning - Forbidden Licenses (go-licenses)
+      #   id: licenses-scan
+      #   continue-on-error: true
+      #   run: |
+      #     echo "## Installing go-licenses tool"
+      #     go install github.com/google/go-licenses@latest
+      #     echo "## Scanning for forbiden licenses ##"
+      #     go-licenses check .
+
+      # - name: Scanning - Credentials (Trufflehog)
+      #   id: credentials-scan 
+      #   continue-on-error: true      
+      #   uses: trufflesecurity/trufflehog@v3.7.3
+      #   with:
+      #     path: ./
+      #     base: ${{ github.event.repository.default_branch }}
+      #     head: HEAD
+      #     args: --debug
+
+      - name: Scanning - Vulnerabilities (Snyk)
+        id: vulnerabilities-scan
+        continue-on-error: true
+        uses: snyk/actions/golang@master
+        with:
+          command: test --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+ 
