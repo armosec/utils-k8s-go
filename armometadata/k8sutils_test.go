@@ -1,7 +1,6 @@
 package armometadata
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -15,7 +14,7 @@ func TestImageTagToImageInfo(t *testing.T) {
 			imageTag: "myregistry/myimage:latest",
 			expected: &ImageInfo{
 				Registry:     "myregistry",
-				VersionImage: "latest",
+				VersionImage: "myimage:latest",
 			},
 			expectedErr: nil,
 		},
@@ -23,14 +22,17 @@ func TestImageTagToImageInfo(t *testing.T) {
 			imageTag: "myregistry/myimage",
 			expected: &ImageInfo{
 				Registry:     "myregistry",
-				VersionImage: "",
+				VersionImage: "myimage",
 			},
 			expectedErr: nil,
 		},
 		{
-			imageTag:    "myimage:latest",
-			expected:    nil,
-			expectedErr: fmt.Errorf("invalid image info myimage:latest"),
+			imageTag: "myimage:latest",
+			expected: &ImageInfo{
+				Registry:     "",
+				VersionImage: "myimage:latest",
+			},
+			expectedErr: nil,
 		},
 	}
 
