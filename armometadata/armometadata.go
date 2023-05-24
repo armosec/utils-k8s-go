@@ -25,6 +25,9 @@ type ClusterConfig struct {
 	StorageEnabled            bool   `json:"storage"`                   // storage configuration (enabled/disabled)
 	NodeAgentEnabled          bool   `json:"nodeAgent"`                 // node agent configuration (enabled/disabled)
 	Namespace                 string `json:"namespace"`                 // namespace to deploy the components
+	KubevulnEnabled           bool   `json:"kubevuln"`                  // kubevuln configuration (enabled/disabled)
+	KubescapeEnabled          bool   `json:"kubescape"`                 // kubescape configuration (enabled/disabled)
+	OtelCollectorEnabled      bool   `json:"otelCollector"`             // otel collector configuration (enabled/disabled)
 }
 
 type ImageInfo struct {
