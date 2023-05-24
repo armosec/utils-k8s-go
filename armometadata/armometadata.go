@@ -26,7 +26,7 @@ type ClusterConfig struct {
 	RelevantImageVulnerabilitiesEnabled          bool   `json:"relevantImageVulnerabilitiesEnabled"`                 // node agent configuration (enabled/disabled)
 	Namespace                 string `json:"namespace"`                 // namespace to deploy the components
 	ImageVulnerabilitiesScanningEnabled           bool   `json:"imageVulnerabilitiesScanningEnabled"`                  // kubevuln configuration (enabled/disabled)
-	KubescapeEnabled          bool   `json:"kubescape"`                 // kubescape configuration (enabled/disabled)
+	PostureScanEnabled          bool   `json:"postureScanEnabled"`                 // kubescape configuration (enabled/disabled)
 	OtelCollectorEnabled      bool   `json:"otelCollector"`             // otel collector configuration (enabled/disabled)
 }
 
