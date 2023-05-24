@@ -23,7 +23,7 @@ type ClusterConfig struct {
 	KubevulnURL               string `json:"kubevulnURL"`               // in-cluster kubevuln component REST API url
 	KubescapeURL              string `json:"kubescapeURL"`              // in-cluster kubescape component REST API url
 	StorageEnabled            bool   `json:"storage"`                   // storage configuration (enabled/disabled)
-	NodeAgentEnabled          bool   `json:"nodeAgent"`                 // node agent configuration (enabled/disabled)
+	RelevantImageVulnerabilitiesEnabled          bool   `json:"relevantImageVulnerabilitiesEnabled"`                 // node agent configuration (enabled/disabled)
 	Namespace                 string `json:"namespace"`                 // namespace to deploy the components
 	KubevulnEnabled           bool   `json:"kubevuln"`                  // kubevuln configuration (enabled/disabled)
 	KubescapeEnabled          bool   `json:"kubescape"`                 // kubescape configuration (enabled/disabled)
