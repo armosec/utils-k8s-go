@@ -22,6 +22,12 @@ type ClusterConfig struct {
 	GatewayRestURL            string `json:"gatewayRestURL"`            // in-cluster gateway component REST API url
 	KubevulnURL               string `json:"kubevulnURL"`               // in-cluster kubevuln component REST API url
 	KubescapeURL              string `json:"kubescapeURL"`              // in-cluster kubescape component REST API url
+	StorageEnabled            bool   `json:"storage"`                   // storage configuration (enabled/disabled)
+	RelevantImageVulnerabilitiesEnabled          bool   `json:"relevantImageVulnerabilitiesEnabled"`                 // node agent configuration (enabled/disabled)
+	Namespace                 string `json:"namespace"`                 // namespace to deploy the components
+	ImageVulnerabilitiesScanningEnabled           bool   `json:"imageVulnerabilitiesScanningEnabled"`                  // kubevuln configuration (enabled/disabled)
+	PostureScanEnabled          bool   `json:"postureScanEnabled"`                 // kubescape configuration (enabled/disabled)
+	OtelCollectorEnabled      bool   `json:"otelCollector"`             // otel collector configuration (enabled/disabled)
 }
 
 type ImageInfo struct {
