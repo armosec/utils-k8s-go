@@ -3,6 +3,7 @@ module github.com/armosec/utils-k8s-go
 go 1.18
 
 require (
+	github.com/armosec/armoapi-go v0.0.191
 	github.com/armosec/utils-go v0.0.12
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/francoispqt/gojay v1.2.13
@@ -36,6 +37,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
+	github.com/stripe/stripe-go/v74 v74.8.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
