@@ -1,13 +1,13 @@
 package armometadata
 
 import (
-	"encoding/json"
 	"fmt"
 	"hash/fnv"
-	"io/ioutil"
+	"path"
 	"strings"
 
 	"github.com/armosec/utils-k8s-go/wlid"
+	"github.com/spf13/viper"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -76,17 +76,20 @@ func ImageTagToImageInfo(imageTag string) (*ImageInfo, error) {
 
 // LoadConfig load config from file
 func LoadConfig(configPath string) (*ClusterConfig, error) {
-	if configPath == "" {
-		configPath = DefaultConfigPath
+
+	viper.AddConfigPath(path.Dir(configPath))
+	viper.SetConfigName(path.Base(configPath))
+	viper.SetConfigType(path.Ext(configPath)[1:])
+
+	viper.AutomaticEnv()
+
+	config := &ClusterConfig{}
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		return config, err
 	}
 
-	dat, err := ioutil.ReadFile(configPath)
-	if err != nil || len(dat) == 0 {
-		return nil, fmt.Errorf("config empty or not found. path: %s", configPath)
-	}
-	componentConfig := &ClusterConfig{}
-	if err := json.Unmarshal(dat, componentConfig); err != nil {
-		return componentConfig, fmt.Errorf("failed to read component config, path: %s, reason: %s", configPath, err.Error())
-	}
-	return componentConfig, nil
+	err = viper.Unmarshal(config)
+	return config, err
 }
