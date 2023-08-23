@@ -21,6 +21,7 @@ type ClusterConfig struct {
 	AccountID                 string `json:"accountID"`                 // use accountID instead of customerGUID
 	EventReceiverRestURL      string `json:"eventReceiverRestURL"`      // event receiver rest url
 	EventReceiverWebsocketURL string `json:"eventReceiverWebsocketURL"` // event receiver websocket url
+	ApiServerRestURL          string `json:"apiServerRestURL"`          // api server rest url
 	RootGatewayURL            string `json:"rootGatewayURL"`            // root gateway url
 	GatewayWebsocketURL       string `json:"gatewayWebsocketURL"`       // in-cluster gateway component websocket url
 	GatewayRestURL            string `json:"gatewayRestURL"`            // in-cluster gateway component REST API url
