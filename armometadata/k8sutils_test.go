@@ -2,6 +2,8 @@ package armometadata
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestImageTagToImageInfo(t *testing.T) {
@@ -50,5 +52,45 @@ func TestImageTagToImageInfo(t *testing.T) {
 				t.Errorf("For input %v, expected versionImage %v but got %v", test.imageTag, test.expected.VersionImage, result.VersionImage)
 			}
 		}
+	}
+}
+
+func TestLoadClusterConfig(t *testing.T) {
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *ClusterConfig
+		wantErr bool
+	}{
+		{
+			name: "TestLoadClusterConfig",
+			args: args{
+				path: "testdata/clusterData.json",
+			},
+			want: &ClusterConfig{
+				ClusterName:               "gke_armo-test-clusters_us-central1-c_matthias",
+				AccountID:                 "ed1e102b-13eb-4d25-b078-e10386305b26",
+				EventReceiverRestURL:      "https://report.eudev3.cyberarmorsoft.com",
+				EventReceiverWebsocketURL: "wss://report.eudev3.cyberarmorsoft.com",
+				RootGatewayURL:            "wss://ens.eudev3.cyberarmorsoft.com/v1/waitfornotification",
+				GatewayWebsocketURL:       "gateway:8001",
+				GatewayRestURL:            "gateway:8002",
+				KubevulnURL:               "kubevuln:8080",
+				KubescapeURL:              "kubescape:8080",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := LoadConfig(tt.args.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LoadClusterConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
