@@ -3,6 +3,7 @@ package armometadata
 import (
 	"testing"
 
+	"github.com/armosec/armoapi-go/armotypes"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -78,6 +79,17 @@ func TestLoadClusterConfig(t *testing.T) {
 				GatewayRestURL:      "gateway:8002",
 				KubevulnURL:         "kubevuln:8080",
 				KubescapeURL:        "kubescape:8080",
+				InstallationData: armotypes.InstallationData{
+					Namespace:                                 "kubescape",
+					ImageVulnerabilitiesScanningEnabled:       BoolPtr(true),
+					PostureScanEnabled:                        BoolPtr(true),
+					OtelCollectorEnabled:                      BoolPtr(true),
+					ClusterProvider:                           "aws",
+					ClusterShortName:                          "ccc",
+					StorageEnabled:                            BoolPtr(true),
+					RelevantImageVulnerabilitiesConfiguration: "detect",
+					RelevantImageVulnerabilitiesEnabled:       BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -91,8 +103,8 @@ func TestLoadClusterConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			viper.Reset()
-
 			got, err := LoadConfig(tt.args.path)
+
 			if tt.wantErr {
 				assert.Errorf(t, err, "LoadClusterConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -102,4 +114,8 @@ func TestLoadClusterConfig(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func BoolPtr(b bool) *bool {
+	return &b
 }

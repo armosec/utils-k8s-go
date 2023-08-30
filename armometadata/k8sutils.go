@@ -1,6 +1,7 @@
 package armometadata
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"path"
@@ -93,6 +94,11 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 		return config, err
 	}
 
-	err = viper.Unmarshal(config)
+	res, err := json.Marshal(viper.AllSettings())
+	if err != nil {
+		return config, err
+	}
+
+	err = json.Unmarshal(res, &config)
 	return config, err
 }
