@@ -76,6 +76,9 @@ func ImageTagToImageInfo(imageTag string) (*ImageInfo, error) {
 
 // LoadConfig load config from file
 func LoadConfig(configPath string) (*ClusterConfig, error) {
+	if configPath == "" {
+		configPath = DefaultConfigPath
+	}
 
 	viper.AddConfigPath(path.Dir(configPath))
 	viper.SetConfigName(path.Base(configPath))

@@ -3,6 +3,7 @@ package armometadata
 import (
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -79,13 +80,24 @@ func TestLoadClusterConfig(t *testing.T) {
 				KubescapeURL:        "kubescape:8080",
 			},
 		},
+		{
+			name: "empty arg does not cause panic",
+			args: args{
+				path: "",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			viper.Reset()
+
 			got, err := LoadConfig(tt.args.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LoadClusterConfig() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Errorf(t, err, "LoadClusterConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			} else {
+				assert.NoErrorf(t, err, "LoadClusterConfig() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			assert.Equal(t, tt.want, got)
 		})
