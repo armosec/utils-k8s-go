@@ -75,6 +75,7 @@ func TestLoadClusterConfig(t *testing.T) {
 			want: &ClusterConfig{
 				ClusterName:         "gke_armo-test-clusters_us-central1-c_matthias",
 				AccountID:           "ed1e102b-13eb-4d25-b078-e10386305b26",
+				ServiceDiscovery:    true,
 				GatewayWebsocketURL: "gateway:8001",
 				GatewayRestURL:      "gateway:8002",
 				KubevulnURL:         "kubevuln:8080",
@@ -95,7 +96,14 @@ func TestLoadClusterConfig(t *testing.T) {
 		{
 			name: "empty arg does not cause panic",
 			args: args{
-				path: "",
+				path: "/this/does/not/exist.json",
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty extension does not cause panic",
+			args: args{
+				path: "/this/does/not/exist",
 			},
 			wantErr: true,
 		},

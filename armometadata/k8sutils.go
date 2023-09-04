@@ -83,7 +83,9 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 
 	viper.AddConfigPath(path.Dir(configPath))
 	viper.SetConfigName(path.Base(configPath))
-	viper.SetConfigType(path.Ext(configPath)[1:])
+	if extension := path.Ext(configPath); extension != "" {
+		viper.SetConfigType(extension[1:])
+	}
 
 	viper.AutomaticEnv()
 

@@ -23,6 +23,7 @@ type ClusterConfig struct {
 	GatewayRestURL      string `json:"gatewayRestURL"`      // in-cluster gateway component REST API url
 	KubevulnURL         string `json:"kubevulnURL"`         // in-cluster kubevuln component REST API url
 	KubescapeURL        string `json:"kubescapeURL"`        // in-cluster kubescape component REST API url
+	ServiceDiscovery    bool   `json:"serviceDiscovery"`    // use service discovery instead of static configuration
 	armotypes.InstallationData
 }
 

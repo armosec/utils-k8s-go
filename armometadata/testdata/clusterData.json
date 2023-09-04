@@ -1,4 +1,5 @@
 {
+  "serviceDiscovery": true,
   "gatewayWebsocketURL": "gateway:8001",
   "gatewayRestURL": "gateway:8002",
   "vulnScanURL": "kubevuln:8080",
