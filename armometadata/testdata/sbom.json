@@ -1,0 +1,71 @@
+{
+    "apiVersion": "spdx.softwarecomposition.kubescape.io/v1beta1",
+    "kind": "SBOMSPDXv2p3",
+    "metadata": {
+        "annotations": {
+            "kubescape.io/image-id": "quay.io/kubescape/kubescape@sha256:608b85d3de51caad84a2bfe089ec2c5dbc192dbe9dc319849834bf0e678e0523",
+            "kubescape.io/status": ""
+        },
+        "creationTimestamp": "2023-11-16T10:13:40Z",
+        "labels": {
+            "kubescape.io/image-id": "quay-io-kubescape-kubescape-sha256-608b85d3de51caad84a2bfe089ec",
+            "kubescape.io/image-name": "quay-io-kubescape-kubescape"
+        },
+        "name": "quay.io-kubescape-kubescape-v3.0.1-8e0523",
+        "namespace": "kubescape",
+        "resourceVersion": "1",
+        "uid": "760b36e2-19ce-47bb-93be-afefcb09b66c"
+    },
+    "spec": {
+        "metadata": {
+            "report": {
+                "createdAt": null
+            },
+            "tool": {
+                "name": "",
+                "version": "v0.76.0"
+            }
+        },
+        "spdx": {
+            "SPDXID": "SPDXRef-DOCUMENT",
+            "annotations": null,
+            "comment": "",
+            "creationInfo": {
+                "comment": "",
+                "created": "2023-11-16T10:13:39Z",
+                "creators": [
+                    "Organization: Anchore, Inc",
+                    "Tool: syft-v0.76.0"
+                ],
+                "licenseListVersion": "3.20"
+            },
+            "dataLicense": "CC0-1.0",
+            "documentDescribes": null,
+            "documentNamespace": "https://anchore.com/syft/image/quay.io/kubescape/kubescape@sha256-608b85d3de51caad84a2bfe089ec2c5dbc192dbe9dc319849834bf0e678e0523-fe03ff99-d7cf-4b09-be11-9cd3dbf0f60b",
+            "externalDocumentRefs": null,
+            "files": null,
+            "hasExtractedLicensingInfos": [
+                {
+                    "comment": "",
+                    "extractedText": "NONE",
+                    "licenseId": "LicenseRef-GPL",
+                    "name": "GPL",
+                    "seeAlsos": null
+                }
+            ],
+            "name": "quay.io/kubescape/kubescape@sha256:608b85d3de51caad84a2bfe089ec2c5dbc192dbe9dc319849834bf0e678e0523",
+            "packages": [],
+            "relationships": [
+                {
+                    "comment": "",
+                    "relatedSpdxElement": "SPDXRef-DOCUMENT",
+                    "relationshipType": "DESCRIBES",
+                    "spdxElementId": "SPDXRef-DOCUMENT"
+                }
+            ],
+            "snippets": null,
+            "spdxVersion": "SPDX-2.3"
+        }
+    },
+    "status": {}
+}

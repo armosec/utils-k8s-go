@@ -1,6 +1,7 @@
 package armometadata
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
@@ -8,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/armosec/utils-k8s-go/wlid"
+	"github.com/olvrng/ujson"
 	"github.com/spf13/viper"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -101,4 +103,61 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 
 	err = json.Unmarshal(res, &config)
 	return config, err
+}
+
+// ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
+func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[string]string, map[string]string, string, string) {
+	// output values
+	annotations := map[string]string{}
+	labels := map[string]string{}
+	ownerReferences := map[string]string{}
+	creationTs := ""
+	resourceVersion := ""
+	// ujson parsing
+	var parent string
+	err := ujson.Walk(input, func(level int, key, value []byte) bool {
+		switch level {
+		case 1:
+			// skip everything except metadata
+			if !bytes.EqualFold(key, []byte(`"metadata"`)) {
+				return false
+			}
+		case 2:
+			// read creationTimestamp
+			if bytes.EqualFold(key, []byte(`"creationTimestamp"`)) {
+				creationTs = unquote(value)
+			}
+			// read resourceVersion
+			if bytes.EqualFold(key, []byte(`"resourceVersion"`)) {
+				resourceVersion = unquote(value)
+			}
+			// record parent for level 3
+			parent = unquote(key)
+		case 3:
+			// read annotations
+			if parent == "annotations" {
+				annotations[unquote(key)] = unquote(value)
+			}
+			// read labels
+			if parent == "labels" {
+				labels[unquote(key)] = unquote(value)
+			}
+		case 4:
+			// read ownerReferences
+			if parent == "ownerReferences" {
+				ownerReferences[unquote(key)] = unquote(value)
+			}
+
+		}
+		return true
+	})
+	return err, annotations, labels, ownerReferences, creationTs, resourceVersion
+}
+
+func unquote(value []byte) string {
+	buf, err := ujson.Unquote(value)
+	if err != nil {
+		return string(value)
+	}
+	return string(buf)
 }
