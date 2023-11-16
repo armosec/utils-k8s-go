@@ -7,6 +7,7 @@ require (
 	github.com/armosec/utils-go v0.0.20
 	github.com/docker/docker v24.0.5+incompatible
 	github.com/francoispqt/gojay v1.2.13
+	github.com/olvrng/ujson v1.1.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.22.0

@@ -1,0 +1,368 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "annotations": {
+            "cni.projectcalico.org/containerID": "d2e279e2ac8fda015bce3d0acf86121f9df8fdf9bf9e028d99d41110ab1b81dc",
+            "cni.projectcalico.org/podIP": "10.0.2.169/32",
+            "cni.projectcalico.org/podIPs": "10.0.2.169/32"
+        },
+        "creationTimestamp": "2023-11-16T10:12:35Z",
+        "generateName": "kubescape-549f95c69-",
+        "labels": {
+            "app": "kubescape",
+            "app.kubernetes.io/instance": "kubescape",
+            "app.kubernetes.io/name": "kubescape",
+            "helm.sh/chart": "kubescape-operator-1.16.2",
+            "helm.sh/revision": "1",
+            "otel": "enabled",
+            "pod-template-hash": "549f95c69",
+            "tier": "ks-control-plane"
+        },
+        "name": "kubescape-549f95c69-pfvm7",
+        "namespace": "kubescape",
+        "ownerReferences": [
+            {
+                "apiVersion": "apps/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "ReplicaSet",
+                "name": "kubescape-549f95c69",
+                "uid": "c0ff7d3b-4183-482c-81c5-998faf0b6150"
+            }
+        ],
+        "resourceVersion": "59348379",
+        "uid": "833c4131-2996-49b0-88e7-59d7e78c00fb"
+    },
+    "spec": {
+        "automountServiceAccountToken": true,
+        "containers": [
+            {
+                "command": [
+                    "ksserver"
+                ],
+                "env": [
+                    {
+                        "name": "GOMEMLIMIT",
+                        "value": "400MiB"
+                    },
+                    {
+                        "name": "KS_LOGGER_LEVEL",
+                        "value": "debug"
+                    },
+                    {
+                        "name": "KS_LOGGER_NAME",
+                        "value": "zap"
+                    },
+                    {
+                        "name": "KS_DOWNLOAD_ARTIFACTS",
+                        "value": "true"
+                    },
+                    {
+                        "name": "RULE_PROCESSING_GOMAXPROCS"
+                    },
+                    {
+                        "name": "KS_DEFAULT_CONFIGMAP_NAME",
+                        "value": "kubescape-config"
+                    },
+                    {
+                        "name": "KS_DEFAULT_CONFIGMAP_NAMESPACE",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "metadata.namespace"
+                            }
+                        }
+                    },
+                    {
+                        "name": "KS_CONTEXT",
+                        "value": "gke_armo-test-clusters_us-central1-c_danielg"
+                    },
+                    {
+                        "name": "KS_DEFAULT_CLOUD_CONFIGMAP_NAME",
+                        "value": "ks-cloud-config"
+                    },
+                    {
+                        "name": "KS_ENABLE_HOST_SCANNER",
+                        "value": "true"
+                    },
+                    {
+                        "name": "KS_SKIP_UPDATE_CHECK",
+                        "value": "false"
+                    },
+                    {
+                        "name": "KS_HOST_SCAN_YAML",
+                        "value": "/home/nonroot/.kubescape/host-scanner.yaml"
+                    },
+                    {
+                        "name": "LARGE_CLUSTER_SIZE",
+                        "value": "1500"
+                    },
+                    {
+                        "name": "ACCOUNT_ID",
+                        "valueFrom": {
+                            "secretKeyRef": {
+                                "key": "account",
+                                "name": "cloud-secret"
+                            }
+                        }
+                    },
+                    {
+                        "name": "OTEL_COLLECTOR_SVC",
+                        "value": "otel-collector:4317"
+                    }
+                ],
+                "image": "quay.io/kubescape/kubescape:v3.0.1",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                        "path": "/livez",
+                        "port": 8080,
+                        "scheme": "HTTP"
+                    },
+                    "initialDelaySeconds": 3,
+                    "periodSeconds": 3,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "name": "kubescape",
+                "ports": [
+                    {
+                        "containerPort": 8080,
+                        "name": "http",
+                        "protocol": "TCP"
+                    }
+                ],
+                "readinessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                        "path": "/readyz",
+                        "port": 8080,
+                        "scheme": "HTTP"
+                    },
+                    "initialDelaySeconds": 3,
+                    "periodSeconds": 3,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "resources": {
+                    "limits": {
+                        "memory": "1Gi"
+                    },
+                    "requests": {
+                        "memory": "400Mi"
+                    }
+                },
+                "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "readOnlyRootFilesystem": true,
+                    "runAsNonRoot": true
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/etc/credentials",
+                        "name": "cloud-secret",
+                        "readOnly": true
+                    },
+                    {
+                        "mountPath": "/home/nonroot/.kubescape",
+                        "name": "kubescape-volume",
+                        "subPath": "config.json"
+                    },
+                    {
+                        "mountPath": "/home/nonroot/.kubescape/host-scanner.yaml",
+                        "name": "host-scanner-definition",
+                        "subPath": "host-scanner-yaml"
+                    },
+                    {
+                        "mountPath": "/home/nonroot/results",
+                        "name": "results"
+                    },
+                    {
+                        "mountPath": "/home/nonroot/failed",
+                        "name": "failed"
+                    },
+                    {
+                        "mountPath": "/etc/config",
+                        "name": "ks-cloud-config",
+                        "readOnly": true
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-64hdm",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "gke-danielg-default-pool-8ca9aa65-fshh",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+            "fsGroup": 65532,
+            "runAsUser": 65532
+        },
+        "serviceAccount": "kubescape",
+        "serviceAccountName": "kubescape",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "name": "cloud-secret",
+                "secret": {
+                    "defaultMode": 420,
+                    "secretName": "cloud-secret"
+                }
+            },
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "items": [
+                        {
+                            "key": "clusterData",
+                            "path": "clusterData.json"
+                        },
+                        {
+                            "key": "services",
+                            "path": "services.json"
+                        }
+                    ],
+                    "name": "ks-cloud-config"
+                },
+                "name": "ks-cloud-config"
+            },
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "name": "host-scanner-definition"
+                },
+                "name": "host-scanner-definition"
+            },
+            {
+                "emptyDir": {},
+                "name": "kubescape-volume"
+            },
+            {
+                "emptyDir": {},
+                "name": "results"
+            },
+            {
+                "emptyDir": {},
+                "name": "failed"
+            },
+            {
+                "name": "kube-api-access-64hdm",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2023-11-16T10:12:35Z",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2023-11-16T10:12:39Z",
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2023-11-16T10:12:39Z",
+                "status": "True",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2023-11-16T10:12:35Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "containerd://e100754284db718d949f90ac10c3bd7b7abae1238db791d41cd7245e4ee382ff",
+                "image": "quay.io/kubescape/kubescape:v3.0.1",
+                "imageID": "quay.io/kubescape/kubescape@sha256:608b85d3de51caad84a2bfe089ec2c5dbc192dbe9dc319849834bf0e678e0523",
+                "lastState": {},
+                "name": "kubescape",
+                "ready": true,
+                "restartCount": 0,
+                "started": true,
+                "state": {
+                    "running": {
+                        "startedAt": "2023-11-16T10:12:36Z"
+                    }
+                }
+            }
+        ],
+        "hostIP": "10.128.0.99",
+        "phase": "Running",
+        "podIP": "10.0.2.169",
+        "podIPs": [
+            {
+                "ip": "10.0.2.169"
+            }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2023-11-16T10:12:35Z"
+    }
+}

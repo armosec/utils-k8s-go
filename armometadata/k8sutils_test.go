@@ -1,6 +1,8 @@
 package armometadata
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/armosec/armoapi-go/armotypes"
@@ -118,4 +120,72 @@ func TestLoadClusterConfig(t *testing.T) {
 
 func BoolPtr(b bool) *bool {
 	return &b
+}
+
+func TestExtractMetadataFromJsonBytes(t *testing.T) {
+	tests := []struct {
+		name        string
+		want        error
+		annotations map[string]string
+		labels      map[string]string
+		creationTs  string
+	}{
+		{
+			name: "applicationactivity",
+			annotations: map[string]string{
+				"kubescape.io/status": "",
+				"kubescape.io/wlid":   "wlid://cluster-gke_armo-test-clusters_us-central1-c_danielg/namespace-kubescape/deployment-storage",
+			},
+			labels: map[string]string{
+				"kubescape.io/workload-api-group":   "apps",
+				"kubescape.io/workload-api-version": "v1",
+				"kubescape.io/workload-kind":        "Deployment",
+				"kubescape.io/workload-name":        "storage",
+				"kubescape.io/workload-namespace":   "kubescape",
+			},
+			creationTs: "2023-11-16T10:15:05Z",
+		},
+		{
+			name: "pod",
+			annotations: map[string]string{
+				"cni.projectcalico.org/containerID": "d2e279e2ac8fda015bce3d0acf86121f9df8fdf9bf9e028d99d41110ab1b81dc",
+				"cni.projectcalico.org/podIP":       "10.0.2.169/32",
+				"cni.projectcalico.org/podIPs":      "10.0.2.169/32",
+			},
+			labels: map[string]string{
+				"app":                        "kubescape",
+				"app.kubernetes.io/instance": "kubescape",
+				"app.kubernetes.io/name":     "kubescape",
+				"helm.sh/chart":              "kubescape-operator-1.16.2",
+				"helm.sh/revision":           "1",
+				"otel":                       "enabled",
+				"pod-template-hash":          "549f95c69",
+				"tier":                       "ks-control-plane",
+			},
+			creationTs: "2023-11-16T10:12:35Z",
+		},
+		{
+			name: "sbom",
+			annotations: map[string]string{
+				"kubescape.io/image-id": "quay.io/kubescape/kubescape@sha256:608b85d3de51caad84a2bfe089ec2c5dbc192dbe9dc319849834bf0e678e0523",
+				"kubescape.io/status":   "",
+			},
+			labels: map[string]string{
+				"kubescape.io/image-id":   "quay-io-kubescape-kubescape-sha256-608b85d3de51caad84a2bfe089ec",
+				"kubescape.io/image-name": "quay-io-kubescape-kubescape",
+			},
+			creationTs: "2023-11-16T10:13:40Z",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input, err := os.ReadFile(fmt.Sprintf("testdata/%s.json", tt.name))
+			assert.NoError(t, err)
+			got, annotations, labels, creationTs := ExtractMetadataFromJsonBytes(input)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.annotations, annotations)
+			assert.Equal(t, tt.labels, labels)
+			assert.Equal(t, tt.creationTs, creationTs)
+		})
+	}
 }
