@@ -206,3 +206,11 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkExtractMetadataFromJsonBytes(b *testing.B) {
+	input, err := os.ReadFile("testdata/applicationactivity.json")
+	assert.NoError(b, err)
+	for i := 0; i < b.N; i++ {
+		_, _, _, _, _, _ = ExtractMetadataFromJsonBytes(input)
+	}
+}
