@@ -124,11 +124,13 @@ func BoolPtr(b bool) *bool {
 
 func TestExtractMetadataFromJsonBytes(t *testing.T) {
 	tests := []struct {
-		name        string
-		want        error
-		annotations map[string]string
-		labels      map[string]string
-		creationTs  string
+		name            string
+		want            error
+		annotations     map[string]string
+		labels          map[string]string
+		ownerReferences map[string]string
+		creationTs      string
+		resourceVersion string
 	}{
 		{
 			name: "applicationactivity",
@@ -143,7 +145,9 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"kubescape.io/workload-name":        "storage",
 				"kubescape.io/workload-namespace":   "kubescape",
 			},
-			creationTs: "2023-11-16T10:15:05Z",
+			ownerReferences: map[string]string{},
+			creationTs:      "2023-11-16T10:15:05Z",
+			resourceVersion: "1",
 		},
 		{
 			name: "pod",
@@ -162,7 +166,16 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"pod-template-hash":          "549f95c69",
 				"tier":                       "ks-control-plane",
 			},
-			creationTs: "2023-11-16T10:12:35Z",
+			ownerReferences: map[string]string{
+				"apiVersion":         "apps/v1",
+				"blockOwnerDeletion": "true",
+				"controller":         "true",
+				"kind":               "ReplicaSet",
+				"name":               "kubescape-549f95c69",
+				"uid":                "c0ff7d3b-4183-482c-81c5-998faf0b6150",
+			},
+			creationTs:      "2023-11-16T10:12:35Z",
+			resourceVersion: "59348379",
 		},
 		{
 			name: "sbom",
@@ -174,18 +187,22 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"kubescape.io/image-id":   "quay-io-kubescape-kubescape-sha256-608b85d3de51caad84a2bfe089ec",
 				"kubescape.io/image-name": "quay-io-kubescape-kubescape",
 			},
-			creationTs: "2023-11-16T10:13:40Z",
+			ownerReferences: map[string]string{},
+			creationTs:      "2023-11-16T10:13:40Z",
+			resourceVersion: "1",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			input, err := os.ReadFile(fmt.Sprintf("testdata/%s.json", tt.name))
 			assert.NoError(t, err)
-			got, annotations, labels, creationTs := ExtractMetadataFromJsonBytes(input)
+			got, annotations, labels, ownerReferences, creationTs, resourceVersion := ExtractMetadataFromJsonBytes(input)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.annotations, annotations)
 			assert.Equal(t, tt.labels, labels)
+			assert.Equal(t, tt.ownerReferences, ownerReferences)
 			assert.Equal(t, tt.creationTs, creationTs)
+			assert.Equal(t, tt.resourceVersion, resourceVersion)
 		})
 	}
 }
