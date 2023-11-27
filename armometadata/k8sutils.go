@@ -106,18 +106,28 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 }
 
 // ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
-func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[string]string, map[string]string, string, string) {
+func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[string]string, map[string]string, string, string, string, string) {
 	// output values
 	annotations := map[string]string{}
 	labels := map[string]string{}
 	ownerReferences := map[string]string{}
 	creationTs := ""
 	resourceVersion := ""
+	kind := ""
+	apiVersion := ""
 	// ujson parsing
 	var parent string
 	err := ujson.Walk(input, func(level int, key, value []byte) bool {
 		switch level {
 		case 1:
+			if bytes.EqualFold(key, []byte(`"kind"`)) {
+				kind = unquote(value)
+			}
+
+			if bytes.EqualFold(key, []byte(`"apiVersion"`)) {
+				apiVersion = unquote(value)
+			}
+
 			// skip everything except metadata
 			if !bytes.EqualFold(key, []byte(`"metadata"`)) {
 				return false
@@ -151,7 +161,7 @@ func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[s
 		}
 		return true
 	})
-	return err, annotations, labels, ownerReferences, creationTs, resourceVersion
+	return err, annotations, labels, ownerReferences, creationTs, resourceVersion, kind, apiVersion
 }
 
 func unquote(value []byte) string {
