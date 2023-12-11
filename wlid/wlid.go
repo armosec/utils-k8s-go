@@ -81,24 +81,29 @@ func generateWLID(pLevel0, level0, pLevel1, level1, k, name string) string {
 	kind := strings.ToLower(k)
 	kind = strings.Replace(kind, "-", "", -1)
 
-	wlid := WlidPrefix
-	wlid += fmt.Sprintf("%s%s", pLevel0, level0)
-	if level1 == "" {
-		return wlid
-	}
-	wlid += fmt.Sprintf("/%s%s", pLevel1, level1)
+	var wlid strings.Builder
+	wlid.WriteString(WlidPrefix)
+	wlid.WriteString(pLevel0)
+	wlid.WriteString(level0)
+
+	// don't exit if level1 is empty
+	wlid.WriteString("/")
+	wlid.WriteString(pLevel1)
+	wlid.WriteString(level1)
 
 	if kind == "" {
-		return wlid
+		return wlid.String()
 	}
-	wlid += fmt.Sprintf("/%s", kind)
+	wlid.WriteString("/")
+	wlid.WriteString(kind)
 
 	if name == "" {
-		return wlid
+		return wlid.String()
 	}
-	wlid += fmt.Sprintf("-%s", name)
+	wlid.WriteString("-")
+	wlid.WriteString(name)
 
-	return wlid
+	return wlid.String()
 }
 
 // GetWLID get the calculated wlid
