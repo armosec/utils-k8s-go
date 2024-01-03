@@ -1,0 +1,23 @@
+{
+    "apiVersion": "networking.k8s.io/v1",
+    "kind": "NetworkPolicy",
+    "metadata": {
+        "creationTimestamp": "2023-11-16T10:12:35Z",
+      "name": "allow-all-in-namespace",
+      "namespace": "default"
+    },
+    "spec": {
+      "podSelector": {},
+      "policyTypes": ["Ingress"],
+      "ingress": [
+        {
+          "from": [
+            {
+              "podSelector": {}
+            }
+          ]
+        }
+      ]
+    }
+  }
+  

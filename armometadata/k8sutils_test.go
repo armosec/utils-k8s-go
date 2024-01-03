@@ -124,16 +124,41 @@ func BoolPtr(b bool) *bool {
 
 func TestExtractMetadataFromJsonBytes(t *testing.T) {
 	tests := []struct {
-		name            string
-		want            error
-		annotations     map[string]string
-		labels          map[string]string
-		ownerReferences map[string]string
-		creationTs      string
-		resourceVersion string
-		kind            string
-		apiVersion      string
+		name                   string
+		wantErr                error
+		annotations            map[string]string
+		labels                 map[string]string
+		ownerReferences        map[string]string
+		creationTs             string
+		resourceVersion        string
+		kind                   string
+		apiVersion             string
+		podSelectorMatchLabels map[string]string
 	}{
+		{
+			name:                   "networkpolicy_withoutmatching_labels",
+			annotations:            map[string]string{},
+			labels:                 map[string]string{},
+			ownerReferences:        map[string]string{},
+			creationTs:             "2023-11-16T10:12:35Z",
+			resourceVersion:        "",
+			kind:                   "NetworkPolicy",
+			apiVersion:             "networking.k8s.io/v1",
+			podSelectorMatchLabels: map[string]string{},
+		},
+		{
+			name:            "networkpolicy_withmatching_labels",
+			annotations:     map[string]string{},
+			labels:          map[string]string{},
+			ownerReferences: map[string]string{},
+			creationTs:      "2023-11-16T10:12:35Z",
+			resourceVersion: "",
+			kind:            "NetworkPolicy",
+			apiVersion:      "networking.k8s.io/v1",
+			podSelectorMatchLabels: map[string]string{
+				"role": "frontend",
+			},
+		},
 		{
 			name: "applicationactivity",
 			annotations: map[string]string{
@@ -147,11 +172,12 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"kubescape.io/workload-name":        "storage",
 				"kubescape.io/workload-namespace":   "kubescape",
 			},
-			ownerReferences: map[string]string{},
-			creationTs:      "2023-11-16T10:15:05Z",
-			resourceVersion: "1",
-			kind:            "ApplicationActivity",
-			apiVersion:      "spdx.softwarecomposition.kubescape.io/v1beta1",
+			ownerReferences:        map[string]string{},
+			creationTs:             "2023-11-16T10:15:05Z",
+			resourceVersion:        "1",
+			kind:                   "ApplicationActivity",
+			apiVersion:             "spdx.softwarecomposition.kubescape.io/v1beta1",
+			podSelectorMatchLabels: map[string]string{},
 		},
 		{
 			name: "pod",
@@ -178,10 +204,11 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"name":               "kubescape-549f95c69",
 				"uid":                "c0ff7d3b-4183-482c-81c5-998faf0b6150",
 			},
-			creationTs:      "2023-11-16T10:12:35Z",
-			resourceVersion: "59348379",
-			kind:            "Pod",
-			apiVersion:      "v1",
+			creationTs:             "2023-11-16T10:12:35Z",
+			resourceVersion:        "59348379",
+			kind:                   "Pod",
+			apiVersion:             "v1",
+			podSelectorMatchLabels: map[string]string{},
 		},
 		{
 			name: "sbom",
@@ -193,26 +220,28 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"kubescape.io/image-id":   "quay-io-kubescape-kubescape-sha256-608b85d3de51caad84a2bfe089ec",
 				"kubescape.io/image-name": "quay-io-kubescape-kubescape",
 			},
-			ownerReferences: map[string]string{},
-			creationTs:      "2023-11-16T10:13:40Z",
-			resourceVersion: "1",
-			kind:            "SBOMSPDXv2p3",
-			apiVersion:      "spdx.softwarecomposition.kubescape.io/v1beta1",
+			ownerReferences:        map[string]string{},
+			creationTs:             "2023-11-16T10:13:40Z",
+			resourceVersion:        "1",
+			kind:                   "SBOMSPDXv2p3",
+			apiVersion:             "spdx.softwarecomposition.kubescape.io/v1beta1",
+			podSelectorMatchLabels: map[string]string{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			input, err := os.ReadFile(fmt.Sprintf("testdata/%s.json", tt.name))
 			assert.NoError(t, err)
-			got, annotations, labels, ownerReferences, creationTs, resourceVersion, kind, apiVersion := ExtractMetadataFromJsonBytes(input)
-			assert.Equal(t, tt.want, got)
-			assert.Equal(t, tt.annotations, annotations)
-			assert.Equal(t, tt.labels, labels)
-			assert.Equal(t, tt.ownerReferences, ownerReferences)
-			assert.Equal(t, tt.creationTs, creationTs)
-			assert.Equal(t, tt.resourceVersion, resourceVersion)
-			assert.Equal(t, tt.kind, kind)
-			assert.Equal(t, tt.apiVersion, apiVersion)
+			m, err := ExtractMetadataFromJsonBytes(input)
+			assert.Equal(t, tt.wantErr, err)
+			assert.Equal(t, tt.annotations, m.Annotations)
+			assert.Equal(t, tt.labels, m.Labels)
+			assert.Equal(t, tt.ownerReferences, m.OwnerReferences)
+			assert.Equal(t, tt.creationTs, m.CreationTimestamp)
+			assert.Equal(t, tt.resourceVersion, m.ResourceVersion)
+			assert.Equal(t, tt.kind, m.Kind)
+			assert.Equal(t, tt.apiVersion, m.ApiVersion)
+			assert.Equal(t, tt.podSelectorMatchLabels, m.PodSelectorMatchLabels)
 		})
 	}
 }
@@ -221,6 +250,6 @@ func BenchmarkExtractMetadataFromJsonBytes(b *testing.B) {
 	input, err := os.ReadFile("testdata/applicationactivity.json")
 	assert.NoError(b, err)
 	for i := 0; i < b.N; i++ {
-		_, _, _, _, _, _, _, _ = ExtractMetadataFromJsonBytes(input)
+		_, _ = ExtractMetadataFromJsonBytes(input)
 	}
 }

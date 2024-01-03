@@ -105,63 +105,87 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 	return config, err
 }
 
+type Metadata struct {
+	Annotations            map[string]string
+	Labels                 map[string]string
+	OwnerReferences        map[string]string
+	CreationTimestamp      string
+	ResourceVersion        string
+	Kind                   string
+	ApiVersion             string
+	PodSelectorMatchLabels map[string]string
+}
+
 // ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
-func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[string]string, map[string]string, string, string, string, string) {
+func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 	// output values
-	annotations := map[string]string{}
-	labels := map[string]string{}
-	ownerReferences := map[string]string{}
-	creationTs := ""
-	resourceVersion := ""
-	kind := ""
-	apiVersion := ""
+	m := Metadata{
+		Annotations:            map[string]string{},
+		Labels:                 map[string]string{},
+		OwnerReferences:        map[string]string{},
+		PodSelectorMatchLabels: map[string]string{},
+	}
 	// ujson parsing
-	var parent string
+	var parent, subParent, subParent2 string
 	err := ujson.Walk(input, func(level int, key, value []byte) bool {
 		switch level {
 		case 1:
 			if bytes.EqualFold(key, []byte(`"kind"`)) {
-				kind = unquote(value)
+				m.Kind = unquote(value)
 			}
 
 			if bytes.EqualFold(key, []byte(`"apiVersion"`)) {
-				apiVersion = unquote(value)
+				m.ApiVersion = unquote(value)
 			}
 
-			// skip everything except metadata
-			if !bytes.EqualFold(key, []byte(`"metadata"`)) {
+			// skip everything except metadata and spec
+			if !bytes.EqualFold(key, []byte(`"metadata"`)) && !bytes.EqualFold(key, []byte(`"spec"`)) {
 				return false
 			}
-		case 2:
-			// read creationTimestamp
-			if bytes.EqualFold(key, []byte(`"creationTimestamp"`)) {
-				creationTs = unquote(value)
-			}
-			// read resourceVersion
-			if bytes.EqualFold(key, []byte(`"resourceVersion"`)) {
-				resourceVersion = unquote(value)
-			}
-			// record parent for level 3
+
 			parent = unquote(key)
+		case 2:
+			if parent == "metadata" {
+				// read creationTimestamp
+				if bytes.EqualFold(key, []byte(`"creationTimestamp"`)) {
+					m.CreationTimestamp = unquote(value)
+				}
+				// read resourceVersion
+				if bytes.EqualFold(key, []byte(`"resourceVersion"`)) {
+					m.ResourceVersion = unquote(value)
+				}
+
+			}
+
+			// record parent for level 3
+			subParent = unquote(key)
+
 		case 3:
 			// read annotations
-			if parent == "annotations" {
-				annotations[unquote(key)] = unquote(value)
+			if subParent == "annotations" {
+				m.Annotations[unquote(key)] = unquote(value)
 			}
 			// read labels
-			if parent == "labels" {
-				labels[unquote(key)] = unquote(value)
+			if subParent == "labels" {
+				m.Labels[unquote(key)] = unquote(value)
 			}
+
+			subParent2 = unquote(key)
+
 		case 4:
 			// read ownerReferences
-			if parent == "ownerReferences" {
-				ownerReferences[unquote(key)] = unquote(value)
+			if subParent == "ownerReferences" {
+				m.OwnerReferences[unquote(key)] = unquote(value)
+			}
+
+			if subParent2 == "matchLabels" {
+				m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
 			}
 
 		}
 		return true
 	})
-	return err, annotations, labels, ownerReferences, creationTs, resourceVersion, kind, apiVersion
+	return m, err
 }
 
 func unquote(value []byte) string {
