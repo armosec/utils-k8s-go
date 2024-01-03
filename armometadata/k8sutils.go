@@ -106,7 +106,7 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 }
 
 // ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
-func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[string]string, map[string]string, string, string, string, string) {
+func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[string]string, map[string]string, string, string, string, string, map[string]string) {
 	// output values
 	annotations := map[string]string{}
 	labels := map[string]string{}
@@ -115,8 +115,9 @@ func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[s
 	resourceVersion := ""
 	kind := ""
 	apiVersion := ""
+	podSelectorMatchLabels := map[string]string{}
 	// ujson parsing
-	var parent string
+	var parent, subParent, subParent2 string
 	err := ujson.Walk(input, func(level int, key, value []byte) bool {
 		switch level {
 		case 1:
@@ -129,39 +130,54 @@ func ExtractMetadataFromJsonBytes(input []byte) (error, map[string]string, map[s
 			}
 
 			// skip everything except metadata
-			if !bytes.EqualFold(key, []byte(`"metadata"`)) {
+			if !bytes.EqualFold(key, []byte(`"metadata"`)) && !bytes.EqualFold(key, []byte(`"spec"`)) {
 				return false
 			}
-		case 2:
-			// read creationTimestamp
-			if bytes.EqualFold(key, []byte(`"creationTimestamp"`)) {
-				creationTs = unquote(value)
-			}
-			// read resourceVersion
-			if bytes.EqualFold(key, []byte(`"resourceVersion"`)) {
-				resourceVersion = unquote(value)
-			}
-			// record parent for level 3
+
 			parent = unquote(key)
+		case 2:
+			if parent == "metadata" {
+				// read creationTimestamp
+				if bytes.EqualFold(key, []byte(`"creationTimestamp"`)) {
+					creationTs = unquote(value)
+				}
+				// read resourceVersion
+				if bytes.EqualFold(key, []byte(`"resourceVersion"`)) {
+					resourceVersion = unquote(value)
+				}
+
+			}
+
+			// record parent for level 3
+			subParent = unquote(key)
+
 		case 3:
 			// read annotations
-			if parent == "annotations" {
+			if subParent == "annotations" {
 				annotations[unquote(key)] = unquote(value)
 			}
 			// read labels
-			if parent == "labels" {
+			if subParent == "labels" {
 				labels[unquote(key)] = unquote(value)
 			}
+
+			subParent2 = unquote(key)
+
 		case 4:
 			// read ownerReferences
-			if parent == "ownerReferences" {
+			if subParent == "ownerReferences" {
 				ownerReferences[unquote(key)] = unquote(value)
+			}
+
+			if subParent2 == "matchLabels" {
+				podSelectorMatchLabels[unquote(key)] = unquote(value)
+
 			}
 
 		}
 		return true
 	})
-	return err, annotations, labels, ownerReferences, creationTs, resourceVersion, kind, apiVersion
+	return err, annotations, labels, ownerReferences, creationTs, resourceVersion, kind, apiVersion, podSelectorMatchLabels
 }
 
 func unquote(value []byte) string {
