@@ -157,6 +157,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			apiVersion:      "networking.k8s.io/v1",
 			podSelectorMatchLabels: map[string]string{
 				"role": "frontend",
+				"tier": "tier1",
 			},
 		},
 		{
