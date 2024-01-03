@@ -126,7 +126,7 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 		PodSelectorMatchLabels: map[string]string{},
 	}
 	// ujson parsing
-	var parent, subParent, subParent2 string
+	var parent, subParent string
 	err := ujson.Walk(input, func(level int, key, value []byte) bool {
 		switch level {
 		case 1:
@@ -170,19 +170,18 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 				m.Labels[unquote(key)] = unquote(value)
 			}
 
-			subParent2 = unquote(key)
-
 		case 4:
 			// read ownerReferences
 			if subParent == "ownerReferences" {
 				m.OwnerReferences[unquote(key)] = unquote(value)
 			}
 
-			if subParent2 == "matchLabels" {
+			if subParent == "podSelector" {
 				m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
 			}
 
 		}
+
 		return true
 	})
 	return m, err

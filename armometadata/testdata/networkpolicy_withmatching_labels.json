@@ -9,7 +9,8 @@
     "spec": {
       "podSelector": {
         "matchLabels": {
-          "role": "frontend"
+          "role": "frontend",
+          "tier": "tier1"
         }
       },
       "policyTypes": ["Ingress"],
