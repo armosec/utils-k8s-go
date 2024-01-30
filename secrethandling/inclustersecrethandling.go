@@ -7,16 +7,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 // DockerConfigJsonstructure -
-type DockerConfigJsonstructure map[string]map[string]types.AuthConfig
+type DockerConfigJsonstructure map[string]map[string]registry.AuthConfig
 
-func updateSecret(authConfig *types.AuthConfig, serverAddress string) {
+func updateSecret(authConfig *registry.AuthConfig, serverAddress string) {
 	if authConfig.ServerAddress == "" {
 		authConfig.ServerAddress = serverAddress
 	}
@@ -55,14 +55,14 @@ func parseDecodedSecret(sec map[string]string) (string, string) {
 }
 
 // ReadSecret -
-func ReadSecret(secret interface{}, secretName string) (types.AuthConfig, error) {
+func ReadSecret(secret interface{}, secretName string) (registry.AuthConfig, error) {
 	// Store secret based on it's structure
-	var authConfig types.AuthConfig
-	if sec, ok := secret.(*types.AuthConfig); ok {
+	var authConfig registry.AuthConfig
+	if sec, ok := secret.(*registry.AuthConfig); ok {
 		return *sec, nil
 	}
 	if sec, ok := secret.(map[string]string); ok {
-		return types.AuthConfig{Username: sec["username"]}, nil
+		return registry.AuthConfig{Username: sec["username"]}, nil
 	}
 	if sec, ok := secret.(DockerConfigJsonstructure); ok {
 		if _, k := sec["auths"]; !k {
@@ -77,7 +77,7 @@ func ReadSecret(secret interface{}, secretName string) (types.AuthConfig, error)
 	return authConfig, fmt.Errorf("cant find secret")
 }
 
-func GetSecret(clientset *kubernetes.Clientset, namespace, name string) (*types.AuthConfig, error) {
+func GetSecret(clientset *kubernetes.Clientset, namespace, name string) (*registry.AuthConfig, error) {
 	res, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -131,11 +131,11 @@ func GetSecretContent(secret *corev1.Secret) (interface{}, error) {
 			return nil, fmt.Errorf("username  or password not found")
 		}
 
-		return &types.AuthConfig{Username: user, Password: psw}, nil
+		return &registry.AuthConfig{Username: user, Password: psw}, nil
 	}
 }
 
-func ParseSecret(res *corev1.Secret, name string) (*types.AuthConfig, error) {
+func ParseSecret(res *corev1.Secret, name string) (*registry.AuthConfig, error) {
 
 	// Read secret
 	secret, err := GetSecretContent(res)
