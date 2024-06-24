@@ -228,6 +228,33 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			apiVersion:             "spdx.softwarecomposition.kubescape.io/v1beta1",
 			podSelectorMatchLabels: map[string]string{},
 		},
+		{
+			name:                   "caliconetworkpolicy",
+			annotations:            map[string]string{},
+			labels:                 map[string]string{},
+			ownerReferences:        map[string]string{},
+			kind:                   "NetworkPolicy",
+			apiVersion:             "projectcalico.org/v3",
+			podSelectorMatchLabels: map[string]string{"role": "database"},
+		},
+		{
+			name:                   "ciliumnetworkpolicy",
+			annotations:            map[string]string{},
+			labels:                 map[string]string{},
+			ownerReferences:        map[string]string{},
+			kind:                   "CiliumNetworkPolicy",
+			apiVersion:             "cilium.io/v2",
+			podSelectorMatchLabels: map[string]string{"app": "frontend"},
+		},
+		{
+			name:                   "istionetworkpolicy",
+			annotations:            map[string]string{},
+			labels:                 map[string]string{},
+			ownerReferences:        map[string]string{},
+			kind:                   "AuthorizationPolicy",
+			apiVersion:             "security.istio.io/v1",
+			podSelectorMatchLabels: map[string]string{"app": "myapi"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -252,5 +279,39 @@ func BenchmarkExtractMetadataFromJsonBytes(b *testing.B) {
 	assert.NoError(b, err)
 	for i := 0; i < b.N; i++ {
 		_, _ = ExtractMetadataFromJsonBytes(input)
+	}
+}
+
+func Test_parseCalicoSelector(t *testing.T) {
+	tests := []struct {
+		name  string
+		value []byte
+		want  map[string]string
+	}{
+		{
+			name:  "empty",
+			value: []byte(""),
+			want:  map[string]string{},
+		},
+		{
+			name:  "single",
+			value: []byte(`"role == 'database'"`),
+			want:  map[string]string{"role": "database"},
+		},
+		{
+			name:  "multiple",
+			value: []byte(`"role == 'database' && tier == 'frontend'"`),
+			want:  map[string]string{"role": "database", "tier": "frontend"},
+		},
+		{
+			name:  "real",
+			value: []byte(`"app.kubernetes.io/instance == 'kubescape' && app.kubernetes.io/name == 'operator' && tier == 'ks-control-plane'"`),
+			want:  map[string]string{"app.kubernetes.io/instance": "kubescape", "app.kubernetes.io/name": "operator", "tier": "ks-control-plane"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, parseCalicoSelector(tt.value), "parseCalicoSelector(%v)", tt.value)
+		})
 	}
 }

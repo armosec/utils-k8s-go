@@ -1,0 +1,31 @@
+{
+  "apiVersion": "projectcalico.org/v3",
+  "kind": "NetworkPolicy",
+  "metadata": {
+    "name": "allow-tcp-6379",
+    "namespace": "production"
+  },
+  "spec": {
+    "selector": "role == 'database'",
+    "types": [
+      "Ingress",
+      "Egress"
+    ],
+    "ingress": [
+      {
+        "action": "Log",
+        "protocol": "TCP",
+        "source": {
+          "selector": "role == 'frontend'"
+        }
+      },
+      {
+        "action": "Deny",
+        "protocol": "TCP",
+        "source": {
+          "selector": "role == 'frontend'"
+        }
+      }
+    ]
+  }
+}
