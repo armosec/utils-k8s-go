@@ -1,6 +1,6 @@
 module github.com/armosec/utils-k8s-go
 
-go 1.18
+go 1.22.4
 
 require (
 	github.com/armosec/armoapi-go v0.0.234
@@ -20,8 +20,6 @@ require (
 require (
 	github.com/armosec/gojay v1.2.15 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/go-connections v0.4.0 // indirect
-	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect

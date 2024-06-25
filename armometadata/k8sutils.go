@@ -1,11 +1,11 @@
 package armometadata
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"path"
+	"slices"
 	"strings"
 
 	"github.com/armosec/utils-k8s-go/wlid"
@@ -126,65 +126,58 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 		PodSelectorMatchLabels: map[string]string{},
 	}
 	// ujson parsing
-	var parent, subParent string
+	jsonPathElements := make([]string, 0)
 	err := ujson.Walk(input, func(level int, key, value []byte) bool {
-		switch level {
-		case 1:
-			if bytes.EqualFold(key, []byte(`"kind"`)) {
-				m.Kind = unquote(value)
-			}
-
-			if bytes.EqualFold(key, []byte(`"apiVersion"`)) {
-				m.ApiVersion = unquote(value)
-			}
-
-			// skip everything except metadata and spec
-			if !bytes.EqualFold(key, []byte(`"metadata"`)) && !bytes.EqualFold(key, []byte(`"spec"`)) {
-				return false
-			}
-
-			parent = unquote(key)
-		case 2:
-			if parent == "metadata" {
-				// read creationTimestamp
-				if bytes.EqualFold(key, []byte(`"creationTimestamp"`)) {
-					m.CreationTimestamp = unquote(value)
-				}
-				// read resourceVersion
-				if bytes.EqualFold(key, []byte(`"resourceVersion"`)) {
-					m.ResourceVersion = unquote(value)
-				}
-
-			}
-
-			// record parent for level 3
-			subParent = unquote(key)
-
-		case 3:
-			// read annotations
-			if subParent == "annotations" {
-				m.Annotations[unquote(key)] = unquote(value)
-			}
-			// read labels
-			if subParent == "labels" {
-				m.Labels[unquote(key)] = unquote(value)
-			}
-
-		case 4:
-			// read ownerReferences
-			if subParent == "ownerReferences" {
-				m.OwnerReferences[unquote(key)] = unquote(value)
-			}
-
-			if subParent == "podSelector" {
-				m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
-			}
-
+		if level > 0 {
+			jsonPathElements = slices.Replace(jsonPathElements, level-1, len(jsonPathElements), unquote(key))
 		}
-
+		jsonPath := strings.Join(jsonPathElements, ".")
+		switch {
+		case jsonPath == "kind":
+			m.Kind = unquote(value)
+		case jsonPath == "apiVersion":
+			m.ApiVersion = unquote(value)
+		case jsonPath == "metadata.creationTimestamp":
+			m.CreationTimestamp = unquote(value)
+		case jsonPath == "metadata.resourceVersion":
+			m.ResourceVersion = unquote(value)
+		case strings.HasPrefix(jsonPath, "metadata.annotations."):
+			m.Annotations[unquote(key)] = unquote(value)
+		case strings.HasPrefix(jsonPath, "metadata.labels."):
+			m.Labels[unquote(key)] = unquote(value)
+		case strings.HasPrefix(jsonPath, "metadata.ownerReferences.."):
+			m.OwnerReferences[unquote(key)] = unquote(value)
+		case m.ApiVersion == "cilium.io/v2" && strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels."):
+			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
+		case m.ApiVersion == "networking.k8s.io/v1" && strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels."):
+			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
+		case m.ApiVersion == "security.istio.io/v1" && strings.HasPrefix(jsonPath, "spec.selector.matchLabels."):
+			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
+		case m.ApiVersion == "projectcalico.org/v3" && jsonPath == "spec.selector":
+			m.PodSelectorMatchLabels = parseCalicoSelector(value)
+		}
 		return true
 	})
 	return m, err
+}
+
+func parseCalicoSelector(value []byte) map[string]string {
+	selector := map[string]string{}
+	for _, rule := range strings.Split(unquote(value), "&&") {
+		s := strings.Split(rule, "==")
+		if len(s) != 2 {
+			continue
+		}
+		k := strings.TrimSpace(s[0])
+		v := strings.TrimSpace(s[1])
+		// strconv.Unquote does not handle single quotes
+		if (strings.HasPrefix(v, "'") && strings.HasSuffix(v, "'")) ||
+			(strings.HasPrefix(v, "\"") && strings.HasSuffix(v, "\"")) {
+			v = v[1 : len(v)-1]
+		}
+		selector[k] = v
+	}
+	return selector
 }
 
 func unquote(value []byte) string {

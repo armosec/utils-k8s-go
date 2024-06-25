@@ -1,0 +1,32 @@
+{
+  "apiVersion": "security.istio.io/v1",
+  "kind": "AuthorizationPolicy",
+  "metadata": {
+    "namespace": "ns1",
+    "name": "anyname"
+  },
+  "spec": {
+    "selector": {
+      "matchLabels": {
+        "app": "myapi"
+      }
+    },
+    "action": "AUDIT",
+    "rules": [
+      {
+        "to": [
+          {
+            "operation": {
+              "methods": [
+                "GET"
+              ],
+              "paths": [
+                "/user/profile/*"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
