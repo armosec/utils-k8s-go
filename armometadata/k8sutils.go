@@ -154,14 +154,14 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 		case m.ApiVersion == "security.istio.io/v1" && strings.HasPrefix(jsonPath, "spec.selector.matchLabels."):
 			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
 		case m.ApiVersion == "projectcalico.org/v3" && jsonPath == "spec.selector":
-			m.PodSelectorMatchLabels = parseCalicoSelector(value)
+			m.PodSelectorMatchLabels = ParseCalicoSelector(value)
 		}
 		return true
 	})
 	return m, err
 }
 
-func parseCalicoSelector(value []byte) map[string]string {
+func ParseCalicoSelector(value []byte) map[string]string {
 	selector := map[string]string{}
 	for _, rule := range strings.Split(unquote(value), "&&") {
 		s := strings.Split(rule, "==")

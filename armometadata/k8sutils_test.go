@@ -311,7 +311,7 @@ func Test_parseCalicoSelector(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, parseCalicoSelector(tt.value), "parseCalicoSelector(%v)", tt.value)
+			assert.Equalf(t, tt.want, ParseCalicoSelector(tt.value), "ParseCalicoSelector(%v)", tt.value)
 		})
 	}
 }
