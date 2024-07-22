@@ -143,7 +143,7 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			m.ResourceVersion = unquote(value)
 		case strings.HasPrefix(jsonPath, "metadata.annotations."):
 			m.Annotations[unquote(key)] = unquote(value)
-		case strings.HasPrefix(jsonPath, "metadata.labels."):
+		case strings.Contains(jsonPath, "metadata.labels."):
 			m.Labels[unquote(key)] = unquote(value)
 		case strings.HasPrefix(jsonPath, "metadata.ownerReferences.."):
 			m.OwnerReferences[unquote(key)] = unquote(value)
