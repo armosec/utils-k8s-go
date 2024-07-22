@@ -136,6 +136,21 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 		podSelectorMatchLabels map[string]string
 	}{
 		{
+			name: "testdeployment",
+			annotations: map[string]string{
+				"deployment.kubernetes.io/revision": "1",
+			},
+			labels: map[string]string{
+				"app": "emailservice",
+			},
+			ownerReferences:        map[string]string{},
+			creationTs:             "2024-07-18T19:58:44Z",
+			resourceVersion:        "6486",
+			kind:                   "Deployment",
+			apiVersion:             "apps/v1",
+			podSelectorMatchLabels: map[string]string{},
+		},
+		{
 			name:                   "networkpolicy_withoutmatching_labels",
 			annotations:            map[string]string{},
 			labels:                 map[string]string{},

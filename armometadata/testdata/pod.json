@@ -36,6 +36,11 @@
     },
     "spec": {
         "automountServiceAccountToken": true,
+        "selector": {
+            "matchLabels": {
+                "app": "kubescape"
+            }
+        },
         "containers": [
             {
                 "command": [
