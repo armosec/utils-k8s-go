@@ -259,7 +259,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			ownerReferences:        map[string]string{},
 			kind:                   "CiliumNetworkPolicy",
 			apiVersion:             "cilium.io/v2",
-			podSelectorMatchLabels: map[string]string{"app": "frontend"},
+			podSelectorMatchLabels: map[string]string{"any:app": "frontend", "app": "frontend"},
 		},
 		{
 			name:                   "istionetworkpolicy",

@@ -7,7 +7,7 @@
   "spec": {
     "endpointSelector": {
       "matchLabels": {
-        "app": "frontend"
+        "any:app": "frontend"
       }
     },
     "egress": [
