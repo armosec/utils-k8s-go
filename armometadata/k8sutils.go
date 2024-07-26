@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/armosec/utils-k8s-go/wlid"
+	"github.com/cilium/cilium/pkg/labels"
 	"github.com/olvrng/ujson"
 	"github.com/spf13/viper"
 
@@ -148,7 +149,7 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 		case strings.HasPrefix(jsonPath, "metadata.ownerReferences.."):
 			m.OwnerReferences[unquote(key)] = unquote(value)
 		case m.ApiVersion == "cilium.io/v2" && strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels."):
-			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
+			addCiliumMatchLabels(m.PodSelectorMatchLabels, key, value)
 		case m.ApiVersion == "networking.k8s.io/v1" && strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels."):
 			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
 		case m.ApiVersion == "security.istio.io/v1" && strings.HasPrefix(jsonPath, "spec.selector.matchLabels."):
@@ -178,6 +179,22 @@ func ParseCalicoSelector(value []byte) map[string]string {
 		selector[k] = v
 	}
 	return selector
+}
+
+// addCiliumMatchLabels adds matchLabels from a Cilium EndpointSelector to the given map
+// a virtual label is created for each label with a Cilium specific prefix for matching
+func addCiliumMatchLabels(matchLabels map[string]string, key, value []byte) {
+	k := unquote(key)
+	v := unquote(value)
+	matchLabels[k] = v
+	// check if we have to trim a Cilium specific prefix to k and create a virtual label
+	for _, labelSource := range []string{labels.LabelSourceAny, labels.LabelSourceK8s,
+		labels.LabelSourceReserved, labels.LabelSourceUnspec} {
+		prefix := labelSource + ":"
+		if strings.HasPrefix(k, prefix) {
+			matchLabels[k[len(prefix):]] = v
+		}
+	}
 }
 
 func unquote(value []byte) string {
