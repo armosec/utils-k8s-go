@@ -134,14 +134,37 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 		kind                   string
 		apiVersion             string
 		podSelectorMatchLabels map[string]string
+		podSpecLabels          map[string]string
 	}{
+		{
+			name:        "testcronjob",
+			annotations: map[string]string{},
+			labels: map[string]string{
+				"app":         "backup-system",
+				"team":        "platform",
+				"cost-center": "platform-123",
+			},
+			ownerReferences:        map[string]string{},
+			creationTs:             "",
+			resourceVersion:        "",
+			kind:                   "CronJob",
+			apiVersion:             "batch/v1",
+			podSelectorMatchLabels: map[string]string{},
+			podSpecLabels: map[string]string{
+				"app":         "backup-job",
+				"type":        "scheduled-backup",
+				"environment": "prod",
+				"component":   "database",
+				"version":     "v1.2",
+			},
+		},
 		{
 			name: "testdeployment",
 			annotations: map[string]string{
 				"deployment.kubernetes.io/revision": "1",
 			},
 			labels: map[string]string{
-				"app": "emailservice",
+				"label-key-1": "label-value-1",
 			},
 			ownerReferences:        map[string]string{},
 			creationTs:             "2024-07-18T19:58:44Z",
@@ -149,6 +172,10 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "Deployment",
 			apiVersion:             "apps/v1",
 			podSelectorMatchLabels: map[string]string{},
+			podSpecLabels: map[string]string{
+				"app":           "emailservice",
+				"pod_label_key": "pod_label_value",
+			},
 		},
 		{
 			name:                   "networkpolicy_withoutmatching_labels",
@@ -160,6 +187,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "NetworkPolicy",
 			apiVersion:             "networking.k8s.io/v1",
 			podSelectorMatchLabels: map[string]string{},
+			podSpecLabels:          map[string]string{},
 		},
 		{
 			name:            "networkpolicy_withmatching_labels",
@@ -174,6 +202,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"role": "frontend",
 				"tier": "tier1",
 			},
+			podSpecLabels: map[string]string{},
 		},
 		{
 			name: "applicationactivity",
@@ -194,6 +223,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "ApplicationActivity",
 			apiVersion:             "spdx.softwarecomposition.kubescape.io/v1beta1",
 			podSelectorMatchLabels: map[string]string{},
+			podSpecLabels:          map[string]string{},
 		},
 		{
 			name: "pod",
@@ -225,6 +255,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "Pod",
 			apiVersion:             "v1",
 			podSelectorMatchLabels: map[string]string{},
+			podSpecLabels:          map[string]string{},
 		},
 		{
 			name: "sbom",
@@ -242,6 +273,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "SBOMSPDXv2p3",
 			apiVersion:             "spdx.softwarecomposition.kubescape.io/v1beta1",
 			podSelectorMatchLabels: map[string]string{},
+			podSpecLabels:          map[string]string{},
 		},
 		{
 			name:                   "caliconetworkpolicy",
@@ -251,6 +283,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "NetworkPolicy",
 			apiVersion:             "projectcalico.org/v3",
 			podSelectorMatchLabels: map[string]string{"role": "database"},
+			podSpecLabels:          map[string]string{},
 		},
 		{
 			name:                   "ciliumnetworkpolicy",
@@ -260,6 +293,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "CiliumNetworkPolicy",
 			apiVersion:             "cilium.io/v2",
 			podSelectorMatchLabels: map[string]string{"any:app": "frontend", "app": "frontend"},
+			podSpecLabels:          map[string]string{},
 		},
 		{
 			name:                   "istionetworkpolicy",
@@ -269,6 +303,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			kind:                   "AuthorizationPolicy",
 			apiVersion:             "security.istio.io/v1",
 			podSelectorMatchLabels: map[string]string{"app": "myapi"},
+			podSpecLabels:          map[string]string{},
 		},
 	}
 	for _, tt := range tests {
@@ -285,6 +320,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			assert.Equal(t, tt.kind, m.Kind)
 			assert.Equal(t, tt.apiVersion, m.ApiVersion)
 			assert.Equal(t, tt.podSelectorMatchLabels, m.PodSelectorMatchLabels)
+			assert.Equal(t, tt.podSpecLabels, m.PodSpecLabels)
 		})
 	}
 }

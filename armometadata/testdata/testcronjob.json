@@ -1,0 +1,54 @@
+{
+    "apiVersion": "batch/v1",
+    "kind": "CronJob",
+    "metadata": {
+      "name": "data-backup",
+      "labels": {
+        "app": "backup-system",
+        "team": "platform",
+        "cost-center": "platform-123"
+      }
+    },
+    "spec": {
+      "schedule": "0 * * * *",
+      "concurrencyPolicy": "Forbid",
+      "successfulJobsHistoryLimit": 3,
+      "failedJobsHistoryLimit": 1,
+      "jobTemplate": {
+        "metadata": {
+          "labels": {
+            "generated-by": "cronjob",
+            "type": "backup-job",
+            "criticality": "high"
+          }
+        },
+        "spec": {
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "backup-job",
+                "type": "scheduled-backup",
+                "environment": "prod",
+                "component": "database",
+                "version": "v1.2"
+              }
+            },
+            "spec": {
+              "containers": [
+                {
+                  "name": "backup-container",
+                  "image": "backup-image:v1",
+                  "command": [
+                    "/bin/sh",
+                    "-c",
+                    "echo performing backup"
+                  ]
+                }
+              ],
+              "restartPolicy": "OnFailure"
+            }
+          }
+        }
+      }
+    }
+  }

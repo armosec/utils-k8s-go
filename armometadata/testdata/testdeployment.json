@@ -5,6 +5,9 @@
         "annotations": {
             "deployment.kubernetes.io/revision": "1"
         },
+        "labels": {
+            "label-key-1": "label-value-1"
+        },
         "creationTimestamp": "2024-07-18T19:58:44Z",
         "generation": 1,
         "name": "emailservice",
@@ -32,7 +35,8 @@
             "metadata": {
                 "creationTimestamp": null,
                 "labels": {
-                    "app": "emailservice"
+                    "app": "emailservice",
+                    "pod_label_key": "pod_label_value"
                 }
             },
             "spec": {

@@ -115,6 +115,7 @@ type Metadata struct {
 	Kind                   string
 	ApiVersion             string
 	PodSelectorMatchLabels map[string]string
+	PodSpecLabels          map[string]string
 }
 
 // ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
@@ -124,6 +125,7 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 		Annotations:            map[string]string{},
 		Labels:                 map[string]string{},
 		OwnerReferences:        map[string]string{},
+		PodSpecLabels:          map[string]string{},
 		PodSelectorMatchLabels: map[string]string{},
 	}
 	// ujson parsing
@@ -144,10 +146,14 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			m.ResourceVersion = unquote(value)
 		case strings.HasPrefix(jsonPath, "metadata.annotations."):
 			m.Annotations[unquote(key)] = unquote(value)
-		case strings.Contains(jsonPath, "metadata.labels."):
+		case strings.HasPrefix(jsonPath, "metadata.labels."):
 			m.Labels[unquote(key)] = unquote(value)
 		case strings.HasPrefix(jsonPath, "metadata.ownerReferences.."):
 			m.OwnerReferences[unquote(key)] = unquote(value)
+		case strings.HasPrefix(jsonPath, "spec.template.metadata.labels."):
+			m.PodSpecLabels[unquote(key)] = unquote(value)
+		case strings.HasPrefix(jsonPath, "spec.jobTemplate.spec.template.metadata.labels."):
+			m.PodSpecLabels[unquote(key)] = unquote(value)
 		case m.ApiVersion == "cilium.io/v2" && strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels."):
 			addCiliumMatchLabels(m.PodSelectorMatchLabels, key, value)
 		case m.ApiVersion == "networking.k8s.io/v1" && strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels."):
