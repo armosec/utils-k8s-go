@@ -8,6 +8,7 @@ import (
 	"github.com/armosec/armoapi-go/armotypes"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	rbac "k8s.io/api/rbac/v1"
 )
 
 func TestImageTagToImageInfo(t *testing.T) {
@@ -124,18 +125,66 @@ func BoolPtr(b bool) *bool {
 
 func TestExtractMetadataFromJsonBytes(t *testing.T) {
 	tests := []struct {
-		name                   string
-		wantErr                error
-		annotations            map[string]string
-		labels                 map[string]string
-		ownerReferences        map[string]string
-		creationTs             string
-		resourceVersion        string
-		kind                   string
-		apiVersion             string
-		podSelectorMatchLabels map[string]string
-		podSpecLabels          map[string]string
+		name                  string
+		wantErr               error
+		annotations           map[string]string
+		namespace             string
+		labels                map[string]string
+		ownerReferences       map[string]string
+		creationTs            string
+		resourceVersion       string
+		kind                  string
+		apiVersion            string
+		netpolMatchLabels     map[string]string
+		podSpecLabels         map[string]string
+		serviceSelectorLabels map[string]string
+		subjects              []rbac.Subject
+		roleRef               *rbac.RoleRef
 	}{
+		{
+			name:      "rolebinding",
+			namespace: "kubescape",
+			annotations: map[string]string{
+				"meta.helm.sh/release-name":      "kubescape",
+				"meta.helm.sh/release-namespace": "kubescape",
+			},
+			labels: map[string]string{
+				"app":                          "synchronizer",
+				"app.kubernetes.io/component":  "synchronizer",
+				"app.kubernetes.io/instance":   "kubescape",
+				"app.kubernetes.io/managed-by": "Helm",
+				"app.kubernetes.io/name":       "kubescape-operator",
+				"app.kubernetes.io/version":    "1.26.0",
+				"helm.sh/chart":                "kubescape-operator-1.26.0",
+				"kubescape.io/ignore":          "true",
+				"tier":                         "ks-control-plane",
+			},
+			ownerReferences:       map[string]string{},
+			creationTs:            "",
+			resourceVersion:       "1082880679",
+			kind:                  "RoleBinding",
+			apiVersion:            "rbac.authorization.k8s.io/v1",
+			netpolMatchLabels:     map[string]string{},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
+			subjects: []rbac.Subject{
+				{
+					Kind:      "ServiceAccount",
+					Name:      "synchronizer",
+					Namespace: "kubescape",
+				},
+				{
+					Kind:      "ServiceAccount",
+					Name:      "operator",
+					Namespace: "kubescape",
+				},
+			},
+			roleRef: &rbac.RoleRef{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "Role",
+				Name:     "synchronizer-role",
+			},
+		},
 		{
 			name:        "testcronjob",
 			annotations: map[string]string{},
@@ -144,12 +193,12 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"team":        "platform",
 				"cost-center": "platform-123",
 			},
-			ownerReferences:        map[string]string{},
-			creationTs:             "",
-			resourceVersion:        "",
-			kind:                   "CronJob",
-			apiVersion:             "batch/v1",
-			podSelectorMatchLabels: map[string]string{},
+			ownerReferences:   map[string]string{},
+			creationTs:        "",
+			resourceVersion:   "",
+			kind:              "CronJob",
+			apiVersion:        "batch/v1",
+			netpolMatchLabels: map[string]string{},
 			podSpecLabels: map[string]string{
 				"app":         "backup-job",
 				"type":        "scheduled-backup",
@@ -157,40 +206,46 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"component":   "database",
 				"version":     "v1.2",
 			},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name: "testdeployment",
+			name:      "testdeployment",
+			namespace: "default",
 			annotations: map[string]string{
 				"deployment.kubernetes.io/revision": "1",
 			},
 			labels: map[string]string{
 				"label-key-1": "label-value-1",
 			},
-			ownerReferences:        map[string]string{},
-			creationTs:             "2024-07-18T19:58:44Z",
-			resourceVersion:        "6486",
-			kind:                   "Deployment",
-			apiVersion:             "apps/v1",
-			podSelectorMatchLabels: map[string]string{},
+			ownerReferences:   map[string]string{},
+			creationTs:        "2024-07-18T19:58:44Z",
+			resourceVersion:   "6486",
+			kind:              "Deployment",
+			apiVersion:        "apps/v1",
+			netpolMatchLabels: map[string]string{},
 			podSpecLabels: map[string]string{
 				"app":           "emailservice",
 				"pod_label_key": "pod_label_value",
 			},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name:                   "networkpolicy_withoutmatching_labels",
-			annotations:            map[string]string{},
-			labels:                 map[string]string{},
-			ownerReferences:        map[string]string{},
-			creationTs:             "2023-11-16T10:12:35Z",
-			resourceVersion:        "",
-			kind:                   "NetworkPolicy",
-			apiVersion:             "networking.k8s.io/v1",
-			podSelectorMatchLabels: map[string]string{},
-			podSpecLabels:          map[string]string{},
+			name:                  "networkpolicy_withoutmatching_labels",
+			namespace:             "default",
+			annotations:           map[string]string{},
+			labels:                map[string]string{},
+			ownerReferences:       map[string]string{},
+			creationTs:            "2023-11-16T10:12:35Z",
+			resourceVersion:       "",
+			kind:                  "NetworkPolicy",
+			apiVersion:            "networking.k8s.io/v1",
+			netpolMatchLabels:     map[string]string{},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
 			name:            "networkpolicy_withmatching_labels",
+			namespace:       "default",
 			annotations:     map[string]string{},
 			labels:          map[string]string{},
 			ownerReferences: map[string]string{},
@@ -198,14 +253,16 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			resourceVersion: "",
 			kind:            "NetworkPolicy",
 			apiVersion:      "networking.k8s.io/v1",
-			podSelectorMatchLabels: map[string]string{
+			netpolMatchLabels: map[string]string{
 				"role": "frontend",
 				"tier": "tier1",
 			},
-			podSpecLabels: map[string]string{},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name: "applicationactivity",
+			name:      "applicationactivity",
+			namespace: "kubescape",
 			annotations: map[string]string{
 				"kubescape.io/status": "",
 				"kubescape.io/wlid":   "wlid://cluster-gke_armo-test-clusters_us-central1-c_danielg/namespace-kubescape/deployment-storage",
@@ -217,16 +274,18 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"kubescape.io/workload-name":        "storage",
 				"kubescape.io/workload-namespace":   "kubescape",
 			},
-			ownerReferences:        map[string]string{},
-			creationTs:             "2023-11-16T10:15:05Z",
-			resourceVersion:        "1",
-			kind:                   "ApplicationActivity",
-			apiVersion:             "spdx.softwarecomposition.kubescape.io/v1beta1",
-			podSelectorMatchLabels: map[string]string{},
-			podSpecLabels:          map[string]string{},
+			ownerReferences:       map[string]string{},
+			creationTs:            "2023-11-16T10:15:05Z",
+			resourceVersion:       "1",
+			kind:                  "ApplicationActivity",
+			apiVersion:            "spdx.softwarecomposition.kubescape.io/v1beta1",
+			netpolMatchLabels:     map[string]string{},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name: "pod",
+			name:      "pod",
+			namespace: "kubescape",
 			annotations: map[string]string{
 				"cni.projectcalico.org/containerID": "d2e279e2ac8fda015bce3d0acf86121f9df8fdf9bf9e028d99d41110ab1b81dc",
 				"cni.projectcalico.org/podIP":       "10.0.2.169/32",
@@ -250,15 +309,17 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"name":               "kubescape-549f95c69",
 				"uid":                "c0ff7d3b-4183-482c-81c5-998faf0b6150",
 			},
-			creationTs:             "2023-11-16T10:12:35Z",
-			resourceVersion:        "59348379",
-			kind:                   "Pod",
-			apiVersion:             "v1",
-			podSelectorMatchLabels: map[string]string{},
-			podSpecLabels:          map[string]string{},
+			creationTs:            "2023-11-16T10:12:35Z",
+			resourceVersion:       "59348379",
+			kind:                  "Pod",
+			apiVersion:            "v1",
+			netpolMatchLabels:     map[string]string{},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name: "sbom",
+			name:      "sbom",
+			namespace: "kubescape",
 			annotations: map[string]string{
 				"kubescape.io/image-id": "quay.io/kubescape/kubescape@sha256:608b85d3de51caad84a2bfe089ec2c5dbc192dbe9dc319849834bf0e678e0523",
 				"kubescape.io/status":   "",
@@ -267,43 +328,78 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"kubescape.io/image-id":   "quay-io-kubescape-kubescape-sha256-608b85d3de51caad84a2bfe089ec",
 				"kubescape.io/image-name": "quay-io-kubescape-kubescape",
 			},
-			ownerReferences:        map[string]string{},
-			creationTs:             "2023-11-16T10:13:40Z",
-			resourceVersion:        "1",
-			kind:                   "SBOMSPDXv2p3",
-			apiVersion:             "spdx.softwarecomposition.kubescape.io/v1beta1",
-			podSelectorMatchLabels: map[string]string{},
-			podSpecLabels:          map[string]string{},
+			ownerReferences:       map[string]string{},
+			creationTs:            "2023-11-16T10:13:40Z",
+			resourceVersion:       "1",
+			kind:                  "SBOMSPDXv2p3",
+			apiVersion:            "spdx.softwarecomposition.kubescape.io/v1beta1",
+			netpolMatchLabels:     map[string]string{},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name:                   "caliconetworkpolicy",
-			annotations:            map[string]string{},
-			labels:                 map[string]string{},
-			ownerReferences:        map[string]string{},
-			kind:                   "NetworkPolicy",
-			apiVersion:             "projectcalico.org/v3",
-			podSelectorMatchLabels: map[string]string{"role": "database"},
-			podSpecLabels:          map[string]string{},
+			name:                  "caliconetworkpolicy",
+			namespace:             "production",
+			annotations:           map[string]string{},
+			labels:                map[string]string{},
+			ownerReferences:       map[string]string{},
+			kind:                  "NetworkPolicy",
+			apiVersion:            "projectcalico.org/v3",
+			netpolMatchLabels:     map[string]string{"role": "database"},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name:                   "ciliumnetworkpolicy",
-			annotations:            map[string]string{},
-			labels:                 map[string]string{},
-			ownerReferences:        map[string]string{},
-			kind:                   "CiliumNetworkPolicy",
-			apiVersion:             "cilium.io/v2",
-			podSelectorMatchLabels: map[string]string{"any:app": "frontend", "app": "frontend"},
-			podSpecLabels:          map[string]string{},
+			name:                  "ciliumnetworkpolicy",
+			namespace:             "",
+			annotations:           map[string]string{},
+			labels:                map[string]string{},
+			ownerReferences:       map[string]string{},
+			kind:                  "CiliumNetworkPolicy",
+			apiVersion:            "cilium.io/v2",
+			netpolMatchLabels:     map[string]string{"any:app": "frontend", "app": "frontend"},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
 		},
 		{
-			name:                   "istionetworkpolicy",
-			annotations:            map[string]string{},
-			labels:                 map[string]string{},
-			ownerReferences:        map[string]string{},
-			kind:                   "AuthorizationPolicy",
-			apiVersion:             "security.istio.io/v1",
-			podSelectorMatchLabels: map[string]string{"app": "myapi"},
-			podSpecLabels:          map[string]string{},
+			name:                  "istionetworkpolicy",
+			namespace:             "ns1",
+			annotations:           map[string]string{},
+			labels:                map[string]string{},
+			ownerReferences:       map[string]string{},
+			kind:                  "AuthorizationPolicy",
+			apiVersion:            "security.istio.io/v1",
+			netpolMatchLabels:     map[string]string{"app": "myapi"},
+			podSpecLabels:         map[string]string{},
+			serviceSelectorLabels: map[string]string{},
+		},
+		{
+			name:      "service",
+			namespace: "kubescape",
+			annotations: map[string]string{
+				"meta.helm.sh/release-name":      "kubescape",
+				"meta.helm.sh/release-namespace": "kubescape",
+			},
+			creationTs:      "2024-12-15T06:13:34Z",
+			resourceVersion: "1082880680",
+			labels: map[string]string{
+				"app":                       "kubescape",
+				"app.kubernetes.io/name":    "kubescape-operator",
+				"app.kubernetes.io/version": "1.26.0",
+				"helm.sh/chart":             "kubescape-operator-1.26.0",
+				"kubescape.io/ignore":       "true",
+				"tier":                      "ks-control-plane",
+			},
+			ownerReferences:   map[string]string{},
+			kind:              "Service",
+			apiVersion:        "v1",
+			netpolMatchLabels: map[string]string{},
+			podSpecLabels:     map[string]string{},
+			serviceSelectorLabels: map[string]string{
+				"app.kubernetes.io/component": "kubescape",
+				"app.kubernetes.io/instance":  "kubescape",
+				"app.kubernetes.io/name":      "kubescape-operator",
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -319,8 +415,12 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			assert.Equal(t, tt.resourceVersion, m.ResourceVersion)
 			assert.Equal(t, tt.kind, m.Kind)
 			assert.Equal(t, tt.apiVersion, m.ApiVersion)
-			assert.Equal(t, tt.podSelectorMatchLabels, m.PodSelectorMatchLabels)
+			assert.Equal(t, tt.netpolMatchLabels, m.NetworkPolicyPodSelectorMatchLabels)
 			assert.Equal(t, tt.podSpecLabels, m.PodSpecLabels)
+			assert.Equal(t, tt.serviceSelectorLabels, m.ServicePodSelectorMatchLabels)
+			assert.Equal(t, tt.namespace, m.Namespace)
+			assert.Equal(t, tt.roleRef, m.RoleRef)
+			assert.Equal(t, tt.subjects, m.Subjects)
 		})
 	}
 }

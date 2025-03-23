@@ -12,6 +12,7 @@ import (
 	"github.com/cilium/cilium/pkg/labels"
 	"github.com/olvrng/ujson"
 	"github.com/spf13/viper"
+	rbac "k8s.io/api/rbac/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -107,27 +108,40 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 }
 
 type Metadata struct {
-	Annotations            map[string]string
-	Labels                 map[string]string
-	OwnerReferences        map[string]string
-	CreationTimestamp      string
-	ResourceVersion        string
-	Kind                   string
-	ApiVersion             string
-	PodSelectorMatchLabels map[string]string
-	PodSpecLabels          map[string]string
+	Annotations       map[string]string
+	Labels            map[string]string
+	OwnerReferences   map[string]string
+	CreationTimestamp string
+	ResourceVersion   string
+	Kind              string
+	ApiVersion        string
+	Namespace         string
+
+	// workloads
+	PodSpecLabels map[string]string
+	// network policies
+	NetworkPolicyPodSelectorMatchLabels map[string]string
+	// services
+	ServicePodSelectorMatchLabels map[string]string
+	// for role bindings
+	Subjects []rbac.Subject
+	RoleRef  *rbac.RoleRef
 }
 
 // ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
 func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 	// output values
 	m := Metadata{
-		Annotations:            map[string]string{},
-		Labels:                 map[string]string{},
-		OwnerReferences:        map[string]string{},
-		PodSpecLabels:          map[string]string{},
-		PodSelectorMatchLabels: map[string]string{},
+		Annotations:                         map[string]string{},
+		Labels:                              map[string]string{},
+		OwnerReferences:                     map[string]string{},
+		PodSpecLabels:                       map[string]string{},
+		NetworkPolicyPodSelectorMatchLabels: map[string]string{},
+		ServicePodSelectorMatchLabels:       map[string]string{},
 	}
+
+	currentSubjectIndex := -1
+
 	// ujson parsing
 	jsonPathElements := make([]string, 0)
 	err := ujson.Walk(input, func(level int, key, value []byte) bool {
@@ -135,11 +149,15 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			jsonPathElements = slices.Replace(jsonPathElements, level-1, len(jsonPathElements), unquote(key))
 		}
 		jsonPath := strings.Join(jsonPathElements, ".")
+		// fmt.Println(fmt.Sprintf("%s - %s - %s", jsonPath, unquote(key), unquote(value)))
+
 		switch {
 		case jsonPath == "kind":
 			m.Kind = unquote(value)
 		case jsonPath == "apiVersion":
 			m.ApiVersion = unquote(value)
+		case jsonPath == "metadata.namespace":
+			m.Namespace = unquote(value)
 		case jsonPath == "metadata.creationTimestamp":
 			m.CreationTimestamp = unquote(value)
 		case jsonPath == "metadata.resourceVersion":
@@ -154,17 +172,24 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			m.PodSpecLabels[unquote(key)] = unquote(value)
 		case strings.HasPrefix(jsonPath, "spec.jobTemplate.spec.template.metadata.labels."):
 			m.PodSpecLabels[unquote(key)] = unquote(value)
+		case strings.HasPrefix(jsonPath, "subjects."):
+			parseRoleBindingSubjects(&m, &currentSubjectIndex, key, value)
+		case strings.HasPrefix(jsonPath, "roleRef."):
+			parseRoleBindingRoleRef(&m, key, value)
+		case m.Kind == "Service" && strings.HasPrefix(jsonPath, "spec.selector."):
+			m.ServicePodSelectorMatchLabels[unquote(key)] = unquote(value)
 		case m.ApiVersion == "cilium.io/v2" && strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels."):
-			addCiliumMatchLabels(m.PodSelectorMatchLabels, key, value)
+			addCiliumMatchLabels(m.NetworkPolicyPodSelectorMatchLabels, key, value)
 		case m.ApiVersion == "networking.k8s.io/v1" && strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels."):
-			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
+			m.NetworkPolicyPodSelectorMatchLabels[unquote(key)] = unquote(value)
 		case m.ApiVersion == "security.istio.io/v1" && strings.HasPrefix(jsonPath, "spec.selector.matchLabels."):
-			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
+			m.NetworkPolicyPodSelectorMatchLabels[unquote(key)] = unquote(value)
 		case m.ApiVersion == "projectcalico.org/v3" && jsonPath == "spec.selector":
-			m.PodSelectorMatchLabels = ParseCalicoSelector(value)
+			m.NetworkPolicyPodSelectorMatchLabels = ParseCalicoSelector(value)
 		}
 		return true
 	})
+
 	return m, err
 }
 
@@ -209,4 +234,44 @@ func unquote(value []byte) string {
 		return string(value)
 	}
 	return string(buf)
+}
+
+func parseRoleBindingRoleRef(m *Metadata, key, value []byte) {
+	if m.RoleRef == nil {
+		m.RoleRef = &rbac.RoleRef{}
+	}
+
+	k := unquote(key)
+	switch k {
+	case "apiGroup":
+		m.RoleRef.APIGroup = unquote(value)
+	case "kind":
+		m.RoleRef.Kind = unquote(value)
+	case "name":
+		m.RoleRef.Name = unquote(value)
+	}
+}
+
+func parseRoleBindingSubjects(m *Metadata, currentSubjectIndex *int, key, value []byte) {
+	v := unquote(value)
+	if v == "{" {
+		if m.Subjects == nil {
+			m.Subjects = make([]rbac.Subject, 0)
+		}
+		*currentSubjectIndex += 1
+		m.Subjects = append(m.Subjects, rbac.Subject{})
+		return
+	}
+
+	k := unquote(key)
+	switch k {
+	case "apiGroup":
+		m.Subjects[*currentSubjectIndex].APIGroup = v
+	case "kind":
+		m.Subjects[*currentSubjectIndex].Kind = v
+	case "name":
+		m.Subjects[*currentSubjectIndex].Name = v
+	case "namespace":
+		m.Subjects[*currentSubjectIndex].Namespace = v
+	}
 }

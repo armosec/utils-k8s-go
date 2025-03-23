@@ -1,0 +1,42 @@
+{
+  "apiVersion": "rbac.authorization.k8s.io/v1",
+  "kind": "RoleBinding",
+  "metadata": {
+    "annotations": {
+      "meta.helm.sh/release-name": "kubescape",
+      "meta.helm.sh/release-namespace": "kubescape"
+    },
+    "labels": {
+      "app": "synchronizer",
+      "app.kubernetes.io/component": "synchronizer",
+      "app.kubernetes.io/instance": "kubescape",
+      "app.kubernetes.io/managed-by": "Helm",
+      "app.kubernetes.io/name": "kubescape-operator",
+      "app.kubernetes.io/version": "1.26.0",
+      "helm.sh/chart": "kubescape-operator-1.26.0",
+      "kubescape.io/ignore": "true",
+      "tier": "ks-control-plane"
+    },
+    "name": "synchronizer",
+    "namespace": "kubescape",
+    "resourceVersion": "1082880679",
+    "uid": "dcae3ca9-e2ad-4d56-8b62-469150c67d11"
+  },
+  "roleRef": {
+    "apiGroup": "rbac.authorization.k8s.io",
+    "kind": "Role",
+    "name": "synchronizer-role"
+  },
+  "subjects": [
+    {
+      "kind": "ServiceAccount",
+      "name": "synchronizer",
+      "namespace": "kubescape"
+    },
+    {
+      "kind": "ServiceAccount",
+      "name": "operator",
+      "namespace": "kubescape"
+    }
+  ]
+}
