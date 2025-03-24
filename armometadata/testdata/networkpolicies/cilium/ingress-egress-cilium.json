@@ -1,0 +1,57 @@
+{
+  "apiVersion": "cilium.io/v2",
+  "kind": "CiliumNetworkPolicy",
+  "metadata": {
+    "name": "ingress-egress-policy",
+    "namespace": "default"
+  },
+  "spec": {
+    "endpointSelector": {
+      "matchLabels": {
+        "app": "backend-api"
+      }
+    },
+    "ingress": [
+      {
+        "fromEndpoints": [
+          {
+            "matchLabels": {
+              "app": "frontend"
+            }
+          }
+        ],
+        "toPorts": [
+          {
+            "ports": [
+              {
+                "port": "8080",
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "egress": [
+      {
+        "toEndpoints": [
+          {
+            "matchLabels": {
+              "app": "database"
+            }
+          }
+        ],
+        "toPorts": [
+          {
+            "ports": [
+              {
+                "port": "5432",
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

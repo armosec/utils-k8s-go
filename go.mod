@@ -5,6 +5,7 @@ go 1.22.4
 require (
 	github.com/armosec/armoapi-go v0.0.234
 	github.com/armosec/utils-go v0.0.20
+	github.com/aws/smithy-go v1.20.2
 	github.com/cilium/cilium v1.16.0
 	github.com/docker/docker v26.1.4+incompatible
 	github.com/francoispqt/gojay v1.2.13
@@ -12,10 +13,10 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
-	k8s.io/api v0.30.2
-	k8s.io/apimachinery v0.30.2
+	k8s.io/api v0.30.5
+	k8s.io/apimachinery v0.30.5
 	k8s.io/apiserver v0.30.2
-	k8s.io/client-go v0.30.2
+	k8s.io/client-go v0.30.5
 )
 
 require (

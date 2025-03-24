@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/armosec/armoapi-go/armotypes"
+	"github.com/aws/smithy-go/ptr"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	rbac "k8s.io/api/rbac/v1"
@@ -84,14 +85,14 @@ func TestLoadClusterConfig(t *testing.T) {
 				KubescapeURL:        "kubescape:8080",
 				InstallationData: armotypes.InstallationData{
 					Namespace:                                 "kubescape",
-					ImageVulnerabilitiesScanningEnabled:       BoolPtr(true),
-					PostureScanEnabled:                        BoolPtr(true),
-					OtelCollectorEnabled:                      BoolPtr(true),
+					ImageVulnerabilitiesScanningEnabled:       ptr.Bool(true),
+					PostureScanEnabled:                        ptr.Bool(true),
+					OtelCollectorEnabled:                      ptr.Bool(true),
 					ClusterProvider:                           "aws",
 					ClusterShortName:                          "ccc",
-					StorageEnabled:                            BoolPtr(true),
+					StorageEnabled:                            ptr.Bool(true),
 					RelevantImageVulnerabilitiesConfiguration: "detect",
-					RelevantImageVulnerabilitiesEnabled:       BoolPtr(false),
+					RelevantImageVulnerabilitiesEnabled:       ptr.Bool(false),
 				},
 			},
 		},
@@ -117,10 +118,6 @@ func TestLoadClusterConfig(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
-}
-
-func BoolPtr(b bool) *bool {
-	return &b
 }
 
 func TestExtractMetadataFromJsonBytes(t *testing.T) {
@@ -463,6 +460,110 @@ func Test_parseCalicoSelector(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, ParseCalicoSelector(tt.value), "ParseCalicoSelector(%v)", tt.value)
+		})
+	}
+}
+
+func TestExtractMetadataFromJsonBytesForNetworkPolicies(t *testing.T) {
+	tests := []struct {
+		filename        string
+		hasIngressRules *bool
+		hasEgressRules  *bool
+	}{
+		{
+			filename:       "testdata/networkpolicies/calico/egress-only.json",
+			hasEgressRules: ptr.Bool(true),
+		},
+		{
+			filename: "testdata/networkpolicies/calico/empty.json",
+		},
+		{
+			filename:        "testdata/networkpolicies/calico/ingress-egress.json",
+			hasIngressRules: ptr.Bool(true),
+			hasEgressRules:  ptr.Bool(true),
+		},
+		{
+			filename:        "testdata/networkpolicies/calico/ingress-only.json",
+			hasIngressRules: ptr.Bool(true),
+		},
+		{
+			filename:        "testdata/networkpolicies/cilium/multi-rule-cilium.json",
+			hasIngressRules: ptr.Bool(true),
+			hasEgressRules:  ptr.Bool(true),
+		},
+		{
+			filename:        "testdata/networkpolicies/cilium/ingress-egress-cilium.json",
+			hasIngressRules: ptr.Bool(true),
+			hasEgressRules:  ptr.Bool(true),
+		},
+		{
+			filename:        "testdata/networkpolicies/cilium/ingress-only-cilium.json",
+			hasIngressRules: ptr.Bool(true),
+		},
+		{
+			filename:        "testdata/networkpolicies/cilium/ingress-deny-cilium.json",
+			hasIngressRules: ptr.Bool(true),
+		},
+		{
+			filename: "testdata/networkpolicies/cilium/empty-cilium.json",
+		},
+		{
+			filename:       "testdata/networkpolicies/cilium/egress-only-cilium.json",
+			hasEgressRules: ptr.Bool(true),
+		},
+		{
+			filename:       "testdata/networkpolicies/cilium/egress-deny-cilium.json",
+			hasEgressRules: ptr.Bool(true),
+		},
+		{
+			filename:        "testdata/networkpolicies/k8s/k8s-ingress-only.json",
+			hasIngressRules: ptr.Bool(true),
+		},
+		{
+			filename:       "testdata/networkpolicies/k8s/k8s-egress-only.json",
+			hasEgressRules: ptr.Bool(true),
+		},
+		{
+			filename:        "testdata/networkpolicies/k8s/k8s-ingress-egress.json",
+			hasIngressRules: ptr.Bool(true),
+			hasEgressRules:  ptr.Bool(true),
+		},
+		{
+			filename: "testdata/networkpolicies/k8s/k8s-empty.json",
+		},
+		{
+			filename:        "testdata/networkpolicies/k8s/k8s-ingress-no-policy-type.json",
+			hasIngressRules: ptr.Bool(true),
+		},
+		{
+			filename:       "testdata/networkpolicies/k8s/k8s-egress-no-policy-type.json",
+			hasEgressRules: ptr.Bool(true),
+		},
+		{
+			filename: "testdata/networkpolicies/k8s/k8s-both-no-policy-type.json",
+
+			hasIngressRules: ptr.Bool(true),
+			hasEgressRules:  ptr.Bool(true),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.filename, func(t *testing.T) {
+
+			var err error
+			networkPolicyBytes, err := os.ReadFile(tc.filename)
+			if err != nil {
+				t.Fatalf("failed to convert YAML to JSON: %v", err)
+			}
+
+			result, err := ExtractMetadataFromJsonBytes(networkPolicyBytes)
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			assert.Equal(t, tc.hasIngressRules, result.HasIngressRules)
+			assert.Equal(t, tc.hasEgressRules, result.HasEgressRules)
 		})
 	}
 }

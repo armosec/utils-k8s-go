@@ -1,0 +1,36 @@
+{
+  "apiVersion": "cilium.io/v2",
+  "kind": "CiliumNetworkPolicy",
+  "metadata": {
+    "name": "egress-only-policy",
+    "namespace": "default"
+  },
+  "spec": {
+    "endpointSelector": {
+      "matchLabels": {
+        "app": "backend-api"
+      }
+    },
+    "egress": [
+      {
+        "toEndpoints": [
+          {
+            "matchLabels": {
+              "app": "database"
+            }
+          }
+        ],
+        "toPorts": [
+          {
+            "ports": [
+              {
+                "port": "5432",
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

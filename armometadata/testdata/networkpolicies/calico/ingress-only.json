@@ -1,0 +1,28 @@
+{
+  "apiVersion": "projectcalico.org/v3",
+  "kind": "NetworkPolicy",
+  "metadata": {
+    "name": "allow-specific-ingress",
+    "namespace": "default"
+  },
+  "spec": {
+    "selector": "app == 'backend-api'",
+    "ingress": [
+      {
+        "action": "Allow",
+        "protocol": "TCP",
+        "source": {
+          "selector": "app == 'frontend'"
+        },
+        "destination": {
+          "ports": [
+            8080
+          ]
+        }
+      }
+    ],
+    "types": [
+      "Ingress"
+    ]
+  }
+}

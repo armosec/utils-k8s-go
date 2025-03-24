@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/armosec/utils-k8s-go/wlid"
+	"github.com/aws/smithy-go/ptr"
 	"github.com/cilium/cilium/pkg/labels"
 	"github.com/olvrng/ujson"
 	"github.com/spf13/viper"
@@ -121,6 +122,9 @@ type Metadata struct {
 	PodSpecLabels map[string]string
 	// network policies
 	NetworkPolicyPodSelectorMatchLabels map[string]string
+	HasEgressRules                      *bool
+	HasIngressRules                     *bool
+
 	// services
 	ServicePodSelectorMatchLabels map[string]string
 	// for role bindings
@@ -149,7 +153,6 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			jsonPathElements = slices.Replace(jsonPathElements, level-1, len(jsonPathElements), unquote(key))
 		}
 		jsonPath := strings.Join(jsonPathElements, ".")
-		// fmt.Println(fmt.Sprintf("%s - %s - %s", jsonPath, unquote(key), unquote(value)))
 
 		switch {
 		case jsonPath == "kind":
@@ -178,19 +181,72 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			parseRoleBindingRoleRef(&m, key, value)
 		case m.Kind == "Service" && strings.HasPrefix(jsonPath, "spec.selector."):
 			m.ServicePodSelectorMatchLabels[unquote(key)] = unquote(value)
-		case m.ApiVersion == "cilium.io/v2" && strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels."):
-			addCiliumMatchLabels(m.NetworkPolicyPodSelectorMatchLabels, key, value)
-		case m.ApiVersion == "networking.k8s.io/v1" && strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels."):
-			m.NetworkPolicyPodSelectorMatchLabels[unquote(key)] = unquote(value)
+		// cilium network policies
+		case m.ApiVersion == "cilium.io/v2":
+			if strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels.") {
+				addCiliumMatchLabels(m.NetworkPolicyPodSelectorMatchLabels, key, value)
+			} else if jsonPath == "spec.egress." || jsonPath == "spec.egressDeny." {
+				setHasEgress(&m)
+			} else if jsonPath == "spec.ingress." || jsonPath == "spec.ingressDeny." {
+				setHasIngress(&m)
+			} else if jsonPath == "specs..ingress" || jsonPath == "specs..ingressDeny" {
+				setHasIngress(&m)
+			} else if jsonPath == "specs..egress" || jsonPath == "specs..egressDeny" {
+				setHasEgress(&m)
+			}
+		// k8s network policies
+		case m.ApiVersion == "networking.k8s.io/v1":
+			if strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels.") {
+				m.NetworkPolicyPodSelectorMatchLabels[unquote(key)] = unquote(value)
+			} else if strings.HasPrefix(jsonPath, "spec.policyTypes.") {
+				val := unquote(value)
+				if val == "Egress" {
+					setHasEgress(&m)
+				} else if val == "Ingress" {
+					setHasIngress(&m)
+				}
+			} else if jsonPath == "spec.egress" {
+				setHasEgress(&m)
+			} else if jsonPath == "spec.ingress" {
+				setHasIngress(&m)
+			}
+		// istio network policies
 		case m.ApiVersion == "security.istio.io/v1" && strings.HasPrefix(jsonPath, "spec.selector.matchLabels."):
 			m.NetworkPolicyPodSelectorMatchLabels[unquote(key)] = unquote(value)
-		case m.ApiVersion == "projectcalico.org/v3" && jsonPath == "spec.selector":
-			m.NetworkPolicyPodSelectorMatchLabels = ParseCalicoSelector(value)
+		// calico
+		case m.ApiVersion == "projectcalico.org/v3":
+			if jsonPath == "spec.selector" {
+				m.NetworkPolicyPodSelectorMatchLabels = ParseCalicoSelector(value)
+			} else if strings.HasPrefix(jsonPath, "spec.types.") {
+				val := unquote(value)
+				if val == "Egress" {
+					setHasEgress(&m)
+				}
+				if val == "Ingress" {
+					setHasIngress(&m)
+				}
+			} else if jsonPath == "spec.egress" {
+				setHasEgress(&m)
+			} else if jsonPath == "spec.ingress" {
+				setHasIngress(&m)
+			}
 		}
 		return true
 	})
 
 	return m, err
+}
+
+func setHasEgress(m *Metadata) {
+	if m.HasEgressRules == nil {
+		m.HasEgressRules = ptr.Bool(true)
+	}
+}
+
+func setHasIngress(m *Metadata) {
+	if m.HasIngressRules == nil {
+		m.HasIngressRules = ptr.Bool(true)
+	}
 }
 
 func ParseCalicoSelector(value []byte) map[string]string {

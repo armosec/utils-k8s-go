@@ -1,0 +1,56 @@
+{
+  "apiVersion": "cilium.io/v2",
+  "kind": "CiliumNetworkPolicy",
+  "metadata": {
+    "name": "multi-rule-policy",
+    "namespace": "default"
+  },
+  "specs": [
+    {
+      "endpointSelector": {
+        "matchLabels": {
+          "app": "frontend"
+        }
+      },
+      "egress": [
+        {
+          "toEndpoints": [
+            {
+              "matchLabels": {
+                "app": "backend-api"
+              }
+            }
+          ],
+          "toPorts": [
+            {
+              "ports": [
+                {
+                  "port": "8080",
+                  "protocol": "TCP"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "endpointSelector": {
+        "matchLabels": {
+          "app": "backend-api"
+        }
+      },
+      "ingress": [
+        {
+          "fromEndpoints": [
+            {
+              "matchLabels": {
+                "app": "frontend"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

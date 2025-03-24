@@ -1,0 +1,26 @@
+{
+  "apiVersion": "cilium.io/v2",
+  "kind": "CiliumNetworkPolicy",
+  "metadata": {
+    "name": "ingress-deny-policy",
+    "namespace": "default"
+  },
+  "spec": {
+    "endpointSelector": {
+      "matchLabels": {
+        "app": "backend-api"
+      }
+    },
+    "ingressDeny": [
+      {
+        "fromEndpoints": [
+          {
+            "matchLabels": {
+              "app": "untrusted"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "apiVersion": "networking.k8s.io/v1",
+  "kind": "NetworkPolicy",
+  "metadata": {
+    "name": "egress-no-policy-type",
+    "namespace": "default"
+  },
+  "spec": {
+    "podSelector": {
+      "matchLabels": {
+        "app": "backend-api"
+      }
+    },
+    "egress": [
+      {
+        "to": [
+          {
+            "podSelector": {
+              "matchLabels": {
+                "app": "database"
+              }
+            }
+          }
+        ],
+        "ports": [
+          {
+            "port": 5432,
+            "protocol": "TCP"
+          }
+        ]
+      }
+    ]
+  }
+}
