@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/armosec/utils-k8s-go/wlid"
-	"github.com/aws/smithy-go/ptr"
 	"github.com/cilium/cilium/pkg/labels"
 	"github.com/olvrng/ujson"
 	"github.com/spf13/viper"
 	rbac "k8s.io/api/rbac/v1"
+	"k8s.io/utils/ptr"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -239,13 +239,13 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 
 func setHasEgress(m *Metadata) {
 	if m.HasEgressRules == nil {
-		m.HasEgressRules = ptr.Bool(true)
+		m.HasEgressRules = ptr.To(true)
 	}
 }
 
 func setHasIngress(m *Metadata) {
 	if m.HasIngressRules == nil {
-		m.HasIngressRules = ptr.Bool(true)
+		m.HasIngressRules = ptr.To(true)
 	}
 }
 

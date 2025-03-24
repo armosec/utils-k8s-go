@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/armosec/armoapi-go/armotypes"
-	"github.com/aws/smithy-go/ptr"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	rbac "k8s.io/api/rbac/v1"
+	"k8s.io/utils/ptr"
 )
 
 func TestImageTagToImageInfo(t *testing.T) {
@@ -69,7 +69,7 @@ func TestLoadClusterConfig(t *testing.T) {
 		name    string
 		args    args
 		want    *ClusterConfig
-		wantErr bool
+		wantErr To
 	}{
 		{
 			name: "TestLoadClusterConfig",
@@ -85,14 +85,14 @@ func TestLoadClusterConfig(t *testing.T) {
 				KubescapeURL:        "kubescape:8080",
 				InstallationData: armotypes.InstallationData{
 					Namespace:                                 "kubescape",
-					ImageVulnerabilitiesScanningEnabled:       ptr.Bool(true),
-					PostureScanEnabled:                        ptr.Bool(true),
-					OtelCollectorEnabled:                      ptr.Bool(true),
+					ImageVulnerabilitiesScanningEnabled:       ptr.To(true),
+					PostureScanEnabled:                        ptr.To(true),
+					OtelCollectorEnabled:                      ptr.To(true),
 					ClusterProvider:                           "aws",
 					ClusterShortName:                          "ccc",
-					StorageEnabled:                            ptr.Bool(true),
+					StorageEnabled:                            ptr.To(true),
 					RelevantImageVulnerabilitiesConfiguration: "detect",
-					RelevantImageVulnerabilitiesEnabled:       ptr.Bool(false),
+					RelevantImageVulnerabilitiesEnabled:       ptr.To(false),
 				},
 			},
 		},
@@ -467,83 +467,83 @@ func Test_parseCalicoSelector(t *testing.T) {
 func TestExtractMetadataFromJsonBytesForNetworkPolicies(t *testing.T) {
 	tests := []struct {
 		filename        string
-		hasIngressRules *bool
-		hasEgressRules  *bool
+		hasIngressRules *To
+		hasEgressRules  *To
 	}{
 		{
 			filename:       "testdata/networkpolicies/calico/egress-only.json",
-			hasEgressRules: ptr.Bool(true),
+			hasEgressRules: ptr.To(true),
 		},
 		{
 			filename: "testdata/networkpolicies/calico/empty.json",
 		},
 		{
 			filename:        "testdata/networkpolicies/calico/ingress-egress.json",
-			hasIngressRules: ptr.Bool(true),
-			hasEgressRules:  ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
+			hasEgressRules:  ptr.To(true),
 		},
 		{
 			filename:        "testdata/networkpolicies/calico/ingress-only.json",
-			hasIngressRules: ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
 		},
 		{
 			filename:        "testdata/networkpolicies/cilium/multi-rule-cilium.json",
-			hasIngressRules: ptr.Bool(true),
-			hasEgressRules:  ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
+			hasEgressRules:  ptr.To(true),
 		},
 		{
 			filename:        "testdata/networkpolicies/cilium/ingress-egress-cilium.json",
-			hasIngressRules: ptr.Bool(true),
-			hasEgressRules:  ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
+			hasEgressRules:  ptr.To(true),
 		},
 		{
 			filename:        "testdata/networkpolicies/cilium/ingress-only-cilium.json",
-			hasIngressRules: ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
 		},
 		{
 			filename:        "testdata/networkpolicies/cilium/ingress-deny-cilium.json",
-			hasIngressRules: ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
 		},
 		{
 			filename: "testdata/networkpolicies/cilium/empty-cilium.json",
 		},
 		{
 			filename:       "testdata/networkpolicies/cilium/egress-only-cilium.json",
-			hasEgressRules: ptr.Bool(true),
+			hasEgressRules: ptr.To(true),
 		},
 		{
 			filename:       "testdata/networkpolicies/cilium/egress-deny-cilium.json",
-			hasEgressRules: ptr.Bool(true),
+			hasEgressRules: ptr.To(true),
 		},
 		{
 			filename:        "testdata/networkpolicies/k8s/k8s-ingress-only.json",
-			hasIngressRules: ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
 		},
 		{
 			filename:       "testdata/networkpolicies/k8s/k8s-egress-only.json",
-			hasEgressRules: ptr.Bool(true),
+			hasEgressRules: ptr.To(true),
 		},
 		{
 			filename:        "testdata/networkpolicies/k8s/k8s-ingress-egress.json",
-			hasIngressRules: ptr.Bool(true),
-			hasEgressRules:  ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
+			hasEgressRules:  ptr.To(true),
 		},
 		{
 			filename: "testdata/networkpolicies/k8s/k8s-empty.json",
 		},
 		{
 			filename:        "testdata/networkpolicies/k8s/k8s-ingress-no-policy-type.json",
-			hasIngressRules: ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
 		},
 		{
 			filename:       "testdata/networkpolicies/k8s/k8s-egress-no-policy-type.json",
-			hasEgressRules: ptr.Bool(true),
+			hasEgressRules: ptr.To(true),
 		},
 		{
 			filename: "testdata/networkpolicies/k8s/k8s-both-no-policy-type.json",
 
-			hasIngressRules: ptr.Bool(true),
-			hasEgressRules:  ptr.Bool(true),
+			hasIngressRules: ptr.To(true),
+			hasEgressRules:  ptr.To(true),
 		},
 	}
 
