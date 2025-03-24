@@ -69,7 +69,7 @@ func TestLoadClusterConfig(t *testing.T) {
 		name    string
 		args    args
 		want    *ClusterConfig
-		wantErr To
+		wantErr bool
 	}{
 		{
 			name: "TestLoadClusterConfig",
@@ -467,8 +467,8 @@ func Test_parseCalicoSelector(t *testing.T) {
 func TestExtractMetadataFromJsonBytesForNetworkPolicies(t *testing.T) {
 	tests := []struct {
 		filename        string
-		hasIngressRules *To
-		hasEgressRules  *To
+		hasIngressRules *bool
+		hasEgressRules  *bool
 	}{
 		{
 			filename:       "testdata/networkpolicies/calico/egress-only.json",
