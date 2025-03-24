@@ -12,6 +12,8 @@ import (
 	"github.com/cilium/cilium/pkg/labels"
 	"github.com/olvrng/ujson"
 	"github.com/spf13/viper"
+	rbac "k8s.io/api/rbac/v1"
+	"k8s.io/utils/ptr"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -107,27 +109,43 @@ func LoadConfig(configPath string) (*ClusterConfig, error) {
 }
 
 type Metadata struct {
-	Annotations            map[string]string
-	Labels                 map[string]string
-	OwnerReferences        map[string]string
-	CreationTimestamp      string
-	ResourceVersion        string
-	Kind                   string
-	ApiVersion             string
-	PodSelectorMatchLabels map[string]string
-	PodSpecLabels          map[string]string
+	Annotations       map[string]string
+	Labels            map[string]string
+	OwnerReferences   map[string]string
+	CreationTimestamp string
+	ResourceVersion   string
+	Kind              string
+	ApiVersion        string
+	Namespace         string
+
+	// workloads
+	PodSpecLabels map[string]string
+	// network policies
+	NetworkPolicyPodSelectorMatchLabels map[string]string
+	HasEgressRules                      *bool
+	HasIngressRules                     *bool
+
+	// services
+	ServicePodSelectorMatchLabels map[string]string
+	// for role bindings
+	Subjects []rbac.Subject
+	RoleRef  *rbac.RoleRef
 }
 
 // ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
 func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 	// output values
 	m := Metadata{
-		Annotations:            map[string]string{},
-		Labels:                 map[string]string{},
-		OwnerReferences:        map[string]string{},
-		PodSpecLabels:          map[string]string{},
-		PodSelectorMatchLabels: map[string]string{},
+		Annotations:                         map[string]string{},
+		Labels:                              map[string]string{},
+		OwnerReferences:                     map[string]string{},
+		PodSpecLabels:                       map[string]string{},
+		NetworkPolicyPodSelectorMatchLabels: map[string]string{},
+		ServicePodSelectorMatchLabels:       map[string]string{},
 	}
+
+	currentSubjectIndex := -1
+
 	// ujson parsing
 	jsonPathElements := make([]string, 0)
 	err := ujson.Walk(input, func(level int, key, value []byte) bool {
@@ -135,11 +153,14 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			jsonPathElements = slices.Replace(jsonPathElements, level-1, len(jsonPathElements), unquote(key))
 		}
 		jsonPath := strings.Join(jsonPathElements, ".")
+
 		switch {
 		case jsonPath == "kind":
 			m.Kind = unquote(value)
 		case jsonPath == "apiVersion":
 			m.ApiVersion = unquote(value)
+		case jsonPath == "metadata.namespace":
+			m.Namespace = unquote(value)
 		case jsonPath == "metadata.creationTimestamp":
 			m.CreationTimestamp = unquote(value)
 		case jsonPath == "metadata.resourceVersion":
@@ -154,18 +175,78 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			m.PodSpecLabels[unquote(key)] = unquote(value)
 		case strings.HasPrefix(jsonPath, "spec.jobTemplate.spec.template.metadata.labels."):
 			m.PodSpecLabels[unquote(key)] = unquote(value)
-		case m.ApiVersion == "cilium.io/v2" && strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels."):
-			addCiliumMatchLabels(m.PodSelectorMatchLabels, key, value)
-		case m.ApiVersion == "networking.k8s.io/v1" && strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels."):
-			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
+		case strings.HasPrefix(jsonPath, "subjects."):
+			parseRoleBindingSubjects(&m, &currentSubjectIndex, key, value)
+		case strings.HasPrefix(jsonPath, "roleRef."):
+			parseRoleBindingRoleRef(&m, key, value)
+		case m.Kind == "Service" && strings.HasPrefix(jsonPath, "spec.selector."):
+			m.ServicePodSelectorMatchLabels[unquote(key)] = unquote(value)
+		// cilium network policies
+		case m.ApiVersion == "cilium.io/v2":
+			if strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels.") {
+				addCiliumMatchLabels(m.NetworkPolicyPodSelectorMatchLabels, key, value)
+			} else if jsonPath == "spec.egress." || jsonPath == "spec.egressDeny." {
+				setHasEgress(&m)
+			} else if jsonPath == "spec.ingress." || jsonPath == "spec.ingressDeny." {
+				setHasIngress(&m)
+			} else if jsonPath == "specs..ingress" || jsonPath == "specs..ingressDeny" {
+				setHasIngress(&m)
+			} else if jsonPath == "specs..egress" || jsonPath == "specs..egressDeny" {
+				setHasEgress(&m)
+			}
+		// k8s network policies
+		case m.ApiVersion == "networking.k8s.io/v1":
+			if strings.HasPrefix(jsonPath, "spec.podSelector.matchLabels.") {
+				m.NetworkPolicyPodSelectorMatchLabels[unquote(key)] = unquote(value)
+			} else if strings.HasPrefix(jsonPath, "spec.policyTypes.") {
+				val := unquote(value)
+				if val == "Egress" {
+					setHasEgress(&m)
+				} else if val == "Ingress" {
+					setHasIngress(&m)
+				}
+			} else if jsonPath == "spec.egress" {
+				setHasEgress(&m)
+			} else if jsonPath == "spec.ingress" {
+				setHasIngress(&m)
+			}
+		// istio network policies
 		case m.ApiVersion == "security.istio.io/v1" && strings.HasPrefix(jsonPath, "spec.selector.matchLabels."):
-			m.PodSelectorMatchLabels[unquote(key)] = unquote(value)
-		case m.ApiVersion == "projectcalico.org/v3" && jsonPath == "spec.selector":
-			m.PodSelectorMatchLabels = ParseCalicoSelector(value)
+			m.NetworkPolicyPodSelectorMatchLabels[unquote(key)] = unquote(value)
+		// calico
+		case m.ApiVersion == "projectcalico.org/v3":
+			if jsonPath == "spec.selector" {
+				m.NetworkPolicyPodSelectorMatchLabels = ParseCalicoSelector(value)
+			} else if strings.HasPrefix(jsonPath, "spec.types.") {
+				val := unquote(value)
+				if val == "Egress" {
+					setHasEgress(&m)
+				}
+				if val == "Ingress" {
+					setHasIngress(&m)
+				}
+			} else if jsonPath == "spec.egress" {
+				setHasEgress(&m)
+			} else if jsonPath == "spec.ingress" {
+				setHasIngress(&m)
+			}
 		}
 		return true
 	})
+
 	return m, err
+}
+
+func setHasEgress(m *Metadata) {
+	if m.HasEgressRules == nil {
+		m.HasEgressRules = ptr.To(true)
+	}
+}
+
+func setHasIngress(m *Metadata) {
+	if m.HasIngressRules == nil {
+		m.HasIngressRules = ptr.To(true)
+	}
 }
 
 func ParseCalicoSelector(value []byte) map[string]string {
@@ -209,4 +290,44 @@ func unquote(value []byte) string {
 		return string(value)
 	}
 	return string(buf)
+}
+
+func parseRoleBindingRoleRef(m *Metadata, key, value []byte) {
+	if m.RoleRef == nil {
+		m.RoleRef = &rbac.RoleRef{}
+	}
+
+	k := unquote(key)
+	switch k {
+	case "apiGroup":
+		m.RoleRef.APIGroup = unquote(value)
+	case "kind":
+		m.RoleRef.Kind = unquote(value)
+	case "name":
+		m.RoleRef.Name = unquote(value)
+	}
+}
+
+func parseRoleBindingSubjects(m *Metadata, currentSubjectIndex *int, key, value []byte) {
+	v := unquote(value)
+	if v == "{" {
+		if m.Subjects == nil {
+			m.Subjects = make([]rbac.Subject, 0)
+		}
+		*currentSubjectIndex += 1
+		m.Subjects = append(m.Subjects, rbac.Subject{})
+		return
+	}
+
+	k := unquote(key)
+	switch k {
+	case "apiGroup":
+		m.Subjects[*currentSubjectIndex].APIGroup = v
+	case "kind":
+		m.Subjects[*currentSubjectIndex].Kind = v
+	case "name":
+		m.Subjects[*currentSubjectIndex].Name = v
+	case "namespace":
+		m.Subjects[*currentSubjectIndex].Namespace = v
+	}
 }

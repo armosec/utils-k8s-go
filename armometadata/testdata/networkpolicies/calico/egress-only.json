@@ -1,0 +1,26 @@
+{
+  "apiVersion": "projectcalico.org/v3",
+  "kind": "NetworkPolicy",
+  "metadata": {
+    "name": "allow-specific-egress",
+    "namespace": "default"
+  },
+  "spec": {
+    "selector": "app == 'backend-api'",
+    "egress": [
+      {
+        "action": "Allow",
+        "protocol": "TCP",
+        "destination": {
+          "selector": "app == 'database'",
+          "ports": [
+            5432
+          ]
+        }
+      }
+    ],
+    "types": [
+      "Egress"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "annotations": {
+        "meta.helm.sh/release-name": "kubescape",
+        "meta.helm.sh/release-namespace": "kubescape"
+      },
+      "creationTimestamp": "2024-12-15T06:13:34Z",
+      "labels": {
+        "app": "kubescape",
+        "app.kubernetes.io/name": "kubescape-operator",
+        "app.kubernetes.io/version": "1.26.0",
+        "helm.sh/chart": "kubescape-operator-1.26.0",
+        "kubescape.io/ignore": "true",
+        "tier": "ks-control-plane"
+      },
+      "name": "kubescape",
+      "namespace": "kubescape",
+      "resourceVersion": "1082880680",
+      "uid": "02943cb5-23bc-4f5d-8e70-ff5df2faa5b0"
+    },
+    "spec": {
+      "clusterIP": "172.20.118.255",
+      "clusterIPs": ["172.20.118.255"],
+      "internalTrafficPolicy": "Cluster",
+      "ipFamilies": ["IPv4"],
+      "ipFamilyPolicy": "SingleStack",
+      "ports": [
+        {
+          "name": "http",
+          "port": 8080,
+          "protocol": "TCP",
+          "targetPort": 8080
+        }
+      ],
+      "selector": {
+        "app.kubernetes.io/component": "kubescape",
+        "app.kubernetes.io/instance": "kubescape",
+        "app.kubernetes.io/name": "kubescape-operator"
+      },
+      "sessionAffinity": "None",
+      "type": "ClusterIP"
+    },
+    "status": {
+      "loadBalancer": {}
+    }
+  }
+  

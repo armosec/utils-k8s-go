@@ -1,0 +1,26 @@
+{
+  "apiVersion": "cilium.io/v2",
+  "kind": "CiliumNetworkPolicy",
+  "metadata": {
+    "name": "egress-deny-policy",
+    "namespace": "default"
+  },
+  "spec": {
+    "endpointSelector": {
+      "matchLabels": {
+        "app": "backend-api"
+      }
+    },
+    "egressDeny": [
+      {
+        "toEndpoints": [
+          {
+            "matchLabels": {
+              "app": "restricted"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
