@@ -3,7 +3,7 @@ module github.com/armosec/utils-k8s-go
 go 1.22.4
 
 require (
-	github.com/armosec/armoapi-go v0.0.234
+	github.com/armosec/armoapi-go v0.0.552
 	github.com/armosec/utils-go v0.0.20
 	github.com/cilium/cilium v1.16.0
 	github.com/docker/docker v26.1.4+incompatible
