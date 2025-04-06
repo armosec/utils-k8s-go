@@ -4,6 +4,7 @@ go 1.23.2
 
 toolchain go1.24.1
 
+
 require (
 	github.com/armosec/armoapi-go v0.0.552
 	github.com/armosec/utils-go v0.0.58
