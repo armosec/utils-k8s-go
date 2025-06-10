@@ -130,6 +130,10 @@ type Metadata struct {
 	// for role bindings
 	Subjects []rbac.Subject
 	RoleRef  *rbac.RoleRef
+
+	InitContainers      map[string]struct{} // map of init containers names
+	Containers          map[string]struct{} // map of containers names
+	EphemeralContainers map[string]struct{} // map of ephemeral containers names
 }
 
 // ExtractMetadataFromBytes extracts metadata from the JSON bytes of a Kubernetes object
@@ -142,6 +146,9 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 		PodSpecLabels:                       map[string]string{},
 		NetworkPolicyPodSelectorMatchLabels: map[string]string{},
 		ServicePodSelectorMatchLabels:       map[string]string{},
+		InitContainers:                      map[string]struct{}{},
+		Containers:                          map[string]struct{}{},
+		EphemeralContainers:                 map[string]struct{}{},
 	}
 
 	currentSubjectIndex := -1
@@ -181,6 +188,22 @@ func ExtractMetadataFromJsonBytes(input []byte) (Metadata, error) {
 			parseRoleBindingRoleRef(&m, key, value)
 		case m.Kind == "Service" && strings.HasPrefix(jsonPath, "spec.selector."):
 			m.ServicePodSelectorMatchLabels[unquote(key)] = unquote(value)
+		// Extract container names (Deployments, StatefulSets, DaemonSets, Replicasets, Jobs, CronJobs, Pods)
+		case strings.HasPrefix(jsonPath, "spec.template.spec.initContainers..name"),
+			strings.HasPrefix(jsonPath, "spec.jobTemplate.spec.template.spec.initContainers..name"),
+			strings.HasPrefix(jsonPath, "spec.template.spec.initContainers..name"),
+			strings.HasPrefix(jsonPath, "spec.initContainers..name"):
+			m.InitContainers[unquote(value)] = struct{}{}
+		case strings.HasPrefix(jsonPath, "spec.template.spec.containers..name"),
+			strings.HasPrefix(jsonPath, "spec.jobTemplate.spec.template.spec.containers..name"),
+			strings.HasPrefix(jsonPath, "spec.template.spec.containers..name"),
+			strings.HasPrefix(jsonPath, "spec.containers..name"):
+			m.Containers[unquote(value)] = struct{}{}
+		case strings.HasPrefix(jsonPath, "spec.template.spec.ephemeralContainers..name"),
+			strings.HasPrefix(jsonPath, "spec.jobTemplate.spec.template.spec.ephemeralContainers..name"),
+			strings.HasPrefix(jsonPath, "spec.template.spec.ephemeralContainers..name"),
+			strings.HasPrefix(jsonPath, "spec.ephemeralContainers..name"):
+			m.EphemeralContainers[unquote(value)] = struct{}{}
 		// cilium network policies
 		case m.ApiVersion == "cilium.io/v2":
 			if strings.HasPrefix(jsonPath, "spec.endpointSelector.matchLabels.") {

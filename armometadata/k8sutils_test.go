@@ -137,6 +137,9 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 		serviceSelectorLabels map[string]string
 		subjects              []rbac.Subject
 		roleRef               *rbac.RoleRef
+		initContainers        []string
+		containers            []string
+		ephemeralContainers   []string
 	}{
 		{
 			name:      "rolebinding",
@@ -204,6 +207,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"version":     "v1.2",
 			},
 			serviceSelectorLabels: map[string]string{},
+			containers:            []string{"backup-container"},
 		},
 		{
 			name:      "testdeployment",
@@ -225,6 +229,8 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 				"pod_label_key": "pod_label_value",
 			},
 			serviceSelectorLabels: map[string]string{},
+			containers:            []string{"server"},
+			initContainers:        []string{"init-container-1"},
 		},
 		{
 			name:                  "networkpolicy_withoutmatching_labels",
@@ -313,6 +319,7 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			netpolMatchLabels:     map[string]string{},
 			podSpecLabels:         map[string]string{},
 			serviceSelectorLabels: map[string]string{},
+			containers:            []string{"kubescape"},
 		},
 		{
 			name:      "sbom",
@@ -418,8 +425,19 @@ func TestExtractMetadataFromJsonBytes(t *testing.T) {
 			assert.Equal(t, tt.namespace, m.Namespace)
 			assert.Equal(t, tt.roleRef, m.RoleRef)
 			assert.Equal(t, tt.subjects, m.Subjects)
+			assert.ElementsMatch(t, tt.initContainers, StringSetToSlice(m.InitContainers))
+			assert.ElementsMatch(t, tt.ephemeralContainers, StringSetToSlice(m.EphemeralContainers))
+			assert.ElementsMatch(t, tt.containers, StringSetToSlice(m.Containers))
 		})
 	}
+}
+
+func StringSetToSlice(m map[string]struct{}) []string {
+	s := make([]string, 0, len(m))
+	for k := range m {
+		s = append(s, k)
+	}
+	return s
 }
 
 func BenchmarkExtractMetadataFromJsonBytes(b *testing.B) {

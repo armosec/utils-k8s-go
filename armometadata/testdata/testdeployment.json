@@ -40,6 +40,30 @@
                 }
             },
             "spec": {
+                "initContainers": [
+                    {
+                        "command": [
+                            "/bin/sh",
+                            "-c",
+                            "echo 'This is an init container'; sleep 5"
+                        ],
+                        "image": "gcr.io/google-samples/microservices-demo/emailservice:v0.5.1",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "init-container-1",
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "64Mi"
+                            },
+                            "requests": {
+                                "cpu": "50m",
+                                "memory": "32Mi"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File"
+                    }
+                ],
                 "containers": [
                     {
                         "env": [
